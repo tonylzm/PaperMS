@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Download Test</title>
+</head>
+<body>
+<h2>Upload File</h2>
+<form id="uploadForm" action="/api/upload/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" id="fileInput" required>
+    <button type="submit">Upload</button>
+</form>
+
+<hr>
+
+<h2>Download File</h2>
+<form id="downloadForm" action="/api/download/download" method="get">
+    <label for="filename">Enter File Name to Download:</label>
+    <input type="text" name="filename" id="filename" required>
+    <button type="button" onclick="download()">Download</button>
+</form>
+
+<script>
+    function download() {
+        var filenameInput = document.getElementById("filename");
+        var filename = filenameInput.value;
+        // 对filename进行URL编码
+        var encodedFilename = encodeURIComponent(filename);
+        // 替换表单中的filename值为编码后的值
+        filenameInput.value = encodedFilename;
+        // 提交下载表单
+        document.getElementById("downloadForm").submit();
+        // 恢复原始的filename值
+        filenameInput.value = filename;
+    }
+</script>
+</body>
+</html>
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>test</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<span type="text" th:text="${msg}"></span>-->
+<!--<hr/>-->
+<!--<div>进入添加用户<a href="add">添加用户</a><br/></div>-->
+<!--<div>进入更新用户<a href="update">更新用户</a></div>-->
+<!--</body>-->
+<!--</html>-->

@@ -1,0 +1,14 @@
+<!-- fragments/menu.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>菜单</title>
+</head>
+<body>
+<el-menu-item index="/files" th:fragment="files-menu">
+    <i class="el-icon-document"></i>
+    <span slot="title">文件管理</span>
+</el-menu-item>
+</body>
+</html>
