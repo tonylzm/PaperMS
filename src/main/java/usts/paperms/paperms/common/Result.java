@@ -1,5 +1,7 @@
 package usts.paperms.paperms.common;
 
+import cn.hutool.json.JSONObject;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpHeaders;
@@ -19,11 +21,15 @@ public class Result<T> {
 
     private HttpStatus status;
     private HttpHeaders headers;
+    
 
 
-    public Result(HttpStatus status, HttpHeaders headers, T body) {
+
+    public Result(HttpStatus status, HttpHeaders headers,int code, String message,T body) {
         this.status = status;
         this.headers = headers;
+        this.code = code;
+        this.message = message;
         this.body = body;
     }
     public Result(int code, String message, T body) {
@@ -41,9 +47,9 @@ public class Result<T> {
     }
     // 返回一个成功的响应体
     // 返回一个成功的响应体
-    public static <T> Result<T> ok(T body) {
+    public static <T> Result<T> ok(@Nullable T body) {
         HttpHeaders headers = new HttpHeaders();
-        return new Result<>(HttpStatus.OK, headers, body);
+        return new Result<>(HttpStatus.OK, headers,200,"登录成功", body);
     }
 
     // 设置响应体的内容类型
@@ -64,4 +70,8 @@ public class Result<T> {
         return this;
     }
 
+    public Result<?> body(JSONObject jsonObject) {
+        this.body = (T) jsonObject;
+        return this;
+    }
 }
