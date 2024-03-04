@@ -38,7 +38,10 @@ public class uploadController {
             if (fileName.contains("..")) {
                 return new ResponseEntity<>("Filename contains invalid path sequence", HttpStatus.BAD_REQUEST);
             }
-
+            // Check if the file is a PDF
+            if (!file.getContentType().equalsIgnoreCase("application/pdf")) {
+                return new ResponseEntity<>("Only PDF files are allowed", HttpStatus.BAD_REQUEST);
+            }
             // Calculate MD5 checksum of the file
             String md5Checksum = calculateMD5(file.getBytes());
 
