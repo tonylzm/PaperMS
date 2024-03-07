@@ -6,17 +6,16 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.LoginRequest;
 import usts.paperms.paperms.entity.User;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.service.AESKeyGenerationService;
 import usts.paperms.paperms.service.JsonConverter;
+import usts.paperms.paperms.service.RSAKeyGenerationService;
 import usts.paperms.paperms.service.UserService;
 
 import java.util.Collections;
@@ -29,6 +28,10 @@ public class UserController {
     private UserService userService;
     @Autowired
     private PasswordEncryptionService passwordEncryption;
+    @Autowired
+    private RSAKeyGenerationService rsaKeyGenerationService;
+    @Autowired
+    private AESKeyGenerationService aesKeyGenerationService;
     @PostMapping("/create")
     public ResponseEntity<Users> createUserWithRole(@RequestBody CreateUserWithRoleRequest request) {
         // 创建用户对象
@@ -105,6 +108,19 @@ public class UserController {
         private String password;
 
         // 省略getter和setter方法
+    }
+
+
+    @GetMapping("/generate")
+    public String generateKeys() {
+        try {
+            // 调用Service层方法生成公钥和私钥
+            aesKeyGenerationService.generateAESKey();
+            return "RSA keys generated successfully.";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to generate RSA keys.";
+        }
     }
 
 }

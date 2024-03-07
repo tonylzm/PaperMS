@@ -10,8 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +28,8 @@ public class uploadController {
 
     @Autowired
     private SysFileService sysFileService;
+    @Autowired
+    private RSAFileEncryptionService rsaFileEncryptionService;
 
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
@@ -42,12 +46,14 @@ public class uploadController {
             if (!file.getContentType().equalsIgnoreCase("application/pdf")) {
                 return new ResponseEntity<>("Only PDF files are allowed", HttpStatus.BAD_REQUEST);
             }
+           //encrypt file
             // Calculate MD5 checksum of the file
             String md5Checksum = calculateMD5(file.getBytes());
 
+            File encryptedFile = rsaFileEncryptionService.encryptFile(file);
             // Copy file to the target location
             Path targetLocation = Paths.get(UPLOAD_DIR).resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation);
+            Files.copy(encryptedFile.toPath(), targetLocation);
 
             // Save file information to the database
             SysFile sysFile = new SysFile();
@@ -63,6 +69,8 @@ public class uploadController {
             return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);
         } catch (IOException ex) {
             return new ResponseEntity<>("Could not store the file. Please try again!", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

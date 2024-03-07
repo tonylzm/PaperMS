@@ -6,12 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
 
@@ -27,11 +25,13 @@ public class fileController {
     private static final String DOCUMENTS_DIRECTORY ="src/main/resources/static/files/";
     @Autowired
     private SysFileService sysFileService;
+    @Autowired
+    private RSAFileEncryptionService rsaFileEncryptionService;
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public  Result findPage(@RequestParam Integer pageNum,
-                                  @RequestParam Integer pageSize,
-                                  @RequestParam(defaultValue = "") String name) {
+                            @RequestParam Integer pageSize,
+                            @RequestParam(defaultValue = "") String name) {
         // 调用 SysFileService 的方法执行分页查询
         Page<SysFile> page = sysFileService.findPage(pageNum, pageSize, name);
 
@@ -58,6 +58,29 @@ public class fileController {
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @PostMapping("/decrypt")
+    public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName) {
+        try {
+            // 构建文件路径
+            String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
+
+            // 检查文件是否存在
+            if (!Files.exists(Paths.get(filePath))) {
+                return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
+            }
+
+            //文件解密
+            rsaFileEncryptionService.decryptFile(new File(filePath));
+            return ResponseEntity.ok("File decrypted successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("An error occurred while decrypting the file", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
