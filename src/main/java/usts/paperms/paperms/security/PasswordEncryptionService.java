@@ -47,7 +47,7 @@ public class PasswordEncryptionService {
         return diff == 0;
     }
 
-    private byte[] hashPassword(final char[] password, final byte[] salt) {
+    private byte[] hashPassword(final char[] password, final byte[] salt) {//PBE加密算法
         PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
         try {
             SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGORITHM);

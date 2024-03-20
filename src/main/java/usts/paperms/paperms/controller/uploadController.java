@@ -2,6 +2,7 @@ package usts.paperms.paperms.controller;
 
 // 导入需要的包和类
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,11 +14,14 @@ import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.util.Base64;
 
 
 
@@ -25,6 +29,13 @@ import java.nio.file.Paths;
 @RequestMapping("/api/upload")
 public class uploadController {
     private static final String UPLOAD_DIR = "src/main/resources/static/files/";
+    private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
+
+    private static final String PRIVATE_KEY_FILE_PATH = "static/files/security/private.der";
+    private static final String OUTPUT_DIRECTORY = "src/main/resources/static/files/enter/";
+
+    private static final String AES_KEY_FILE_PATH = "src/main/resources/static/files/AESkey/11.pdf.key";
+
 
     @Autowired
     private SysFileService sysFileService;
@@ -32,12 +43,16 @@ public class uploadController {
     private RSAFileEncryptionService rsaFileEncryptionService;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
+                                                   @RequestParam("username") String username,
+                                                   @RequestParam("from") String from
+                                                  ) {
         if (file.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
         }
 
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+
         try {
             if (fileName.contains("..")) {
                 return new ResponseEntity<>("Filename contains invalid path sequence", HttpStatus.BAD_REQUEST);
@@ -49,6 +64,8 @@ public class uploadController {
            //encrypt file
             // Calculate MD5 checksum of the file
             String md5Checksum = calculateMD5(file.getBytes());
+
+
 
             File encryptedFile = rsaFileEncryptionService.encryptFile(file);
             // Copy file to the target location
@@ -62,6 +79,8 @@ public class uploadController {
             sysFile.setSize(file.getSize());
             sysFile.setUrl(targetLocation.toString());
             sysFile.setMd5(md5Checksum);
+            sysFile.setProduced(username);
+            sysFile.setFromon(from);
             sysFile.setDelete(false);
             sysFile.setEnable(true);
             sysFileService.save(sysFile);
@@ -73,10 +92,49 @@ public class uploadController {
             throw new RuntimeException(e);
         }
     }
-
+    @GetMapping("/public")
+    public ResponseEntity<String> getPublicKey() {
+        try {
+            // 读取公钥文件内容
+            byte[] encodedKey = Files.readAllBytes(Paths.get(PUBLIC_KEY_FILE_PATH));
+            // 将公钥编码为Base64字符串，以便在HTTP响应中发送
+            String publicKey = Base64.getEncoder().encodeToString(encodedKey);
+            // 返回公钥给前端
+            return ResponseEntity.ok(publicKey);
+        } catch (IOException e) {
+            // 处理文件读取异常
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            // 处理其他异常
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    //发送AES密钥
+    @GetMapping("/aeskey")
+    public ResponseEntity<String> getAESKey() {
+        try {
+            // 读取AES密钥文件内容
+            byte[] encodedKey = Files.readAllBytes(Paths.get(AES_KEY_FILE_PATH));
+            // 将AES密钥编码为Base64字符串，以便在HTTP响应中发送
+            String aesKey = Base64.getEncoder().encodeToString(encodedKey);
+            // 返回AES密钥给前端
+            return ResponseEntity.ok(aesKey);
+        } catch (IOException e) {
+            // 处理文件读取异常
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            // 处理其他异常
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
     // Method to calculate MD5 checksum
     private String calculateMD5(byte[] bytes) {
         return DigestUtils.md5Hex(bytes);
     }
+
 }
 
