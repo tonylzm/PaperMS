@@ -45,7 +45,8 @@ public class uploadController {
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
                                                    @RequestParam("username") String username,
-                                                   @RequestParam("from") String from
+                                                   @RequestParam("from") String from,
+                                                    @RequestParam("md5") String md5
                                                   ) {
         if (file.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
@@ -64,7 +65,9 @@ public class uploadController {
            //encrypt file
             // Calculate MD5 checksum of the file
             String md5Checksum = calculateMD5(file.getBytes());
-
+            if(!md5.equals(md5Checksum)){
+                return new ResponseEntity<>("MD5 checksum does not match", HttpStatus.BAD_REQUEST);
+            }
 
 
             File encryptedFile = rsaFileEncryptionService.encryptFile(file);
