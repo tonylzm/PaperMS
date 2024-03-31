@@ -16,12 +16,16 @@ import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
 
+import javax.crypto.Cipher;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 
@@ -32,7 +36,7 @@ public class uploadController {
     private static final String UPLOAD_DIR = "src/main/resources/static/files/";
     private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
 
-    private static final String PRIVATE_KEY_FILE_PATH = "static/files/security/private.der";
+    private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
     private static final String OUTPUT_DIRECTORY = "src/main/resources/static/files/enter/";
 
     private static final String AES_KEY_FILE_PATH = "src/main/resources/static/files/AESkey/11.pdf.key";
@@ -51,13 +55,12 @@ public class uploadController {
                                                    @RequestParam("from") String from,
                                                    @RequestParam("md5") String md5,
                                                    @RequestParam("encryptedFile") MultipartFile encryptedFile,
-                                                   @RequestParam("key") String key,
-                                                   @RequestParam("fileName") String filename
-                                                  ) {
+                                                   @RequestParam("fileName") String filename,
+                                                   @RequestParam("aesKey") String aesKey
+                                                  ) throws Exception {
         if (encryptedFile.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
         }
-
 
         try {
             if (filename.contains("..")) {
@@ -69,8 +72,8 @@ public class uploadController {
             }
            //encrypt file
             // Calculate MD5 checksum of the file
-
-            MultipartFile files= DecryptFileService.decryptFile(encryptedFile,key);
+            String decryptedAesKeyString = decryptAesKeyToString(aesKey);
+            MultipartFile files= DecryptFileService.decryptFile(encryptedFile,decryptedAesKeyString);
             String md5Checksum = calculateMD5(files.getBytes());
             if(!md5.equals(md5Checksum)){
                 return new ResponseEntity<>("MD5 checksum does not match", HttpStatus.BAD_REQUEST);
@@ -145,6 +148,28 @@ public class uploadController {
     private String calculateMD5(byte[] bytes) {
         return DigestUtils.md5Hex(bytes);
     }
+
+    public  String decryptAesKeyToString(String encryptedAesKeyBase64) throws Exception {
+        byte[] privateKeyBytes = Files.readAllBytes(Paths.get(PRIVATE_KEY_FILE_PATH));
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
+        byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);
+
+        // 将解密后的字节数组转换为字符串
+        String decryptedAesKeyString = new String(decryptedAesKeyBytes, "UTF-8");
+
+        return decryptedAesKeyString;
+    }
+
+
+
+
 
 }
 
