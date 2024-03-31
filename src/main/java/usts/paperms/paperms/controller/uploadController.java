@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.service.DecryptFileService;
 import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
@@ -41,45 +42,49 @@ public class uploadController {
     private SysFileService sysFileService;
     @Autowired
     private RSAFileEncryptionService rsaFileEncryptionService;
+    @Autowired
+    private DecryptFileService DecryptFileService;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
+    public ResponseEntity<String> handleFileUpload(//@RequestParam("file") MultipartFile file,
                                                    @RequestParam("username") String username,
                                                    @RequestParam("from") String from,
-                                                    @RequestParam("md5") String md5
+                                                   @RequestParam("md5") String md5,
+                                                   @RequestParam("encryptedFile") MultipartFile encryptedFile,
+                                                   @RequestParam("key") String key,
+                                                   @RequestParam("fileName") String filename
                                                   ) {
-        if (file.isEmpty()) {
+        if (encryptedFile.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
         }
 
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         try {
-            if (fileName.contains("..")) {
+            if (filename.contains("..")) {
                 return new ResponseEntity<>("Filename contains invalid path sequence", HttpStatus.BAD_REQUEST);
             }
             // Check if the file is a PDF
-            if (!file.getContentType().equalsIgnoreCase("application/pdf")) {
+            if (!encryptedFile.getContentType().equalsIgnoreCase("application/pdf")) {
                 return new ResponseEntity<>("Only PDF files are allowed", HttpStatus.BAD_REQUEST);
             }
            //encrypt file
             // Calculate MD5 checksum of the file
-            String md5Checksum = calculateMD5(file.getBytes());
+
+            MultipartFile files= DecryptFileService.decryptFile(encryptedFile,key);
+            String md5Checksum = calculateMD5(files.getBytes());
             if(!md5.equals(md5Checksum)){
                 return new ResponseEntity<>("MD5 checksum does not match", HttpStatus.BAD_REQUEST);
             }
-
-
-            File encryptedFile = rsaFileEncryptionService.encryptFile(file);
+            File encryptedFiles = rsaFileEncryptionService.encryptFile(files,filename);
             // Copy file to the target location
-            Path targetLocation = Paths.get(UPLOAD_DIR).resolve(fileName);
-            Files.copy(encryptedFile.toPath(), targetLocation);
+            Path targetLocation = Paths.get(UPLOAD_DIR).resolve(filename);
+            Files.copy(encryptedFiles.toPath(), targetLocation);
 
             // Save file information to the database
             SysFile sysFile = new SysFile();
-            sysFile.setName(fileName);
-            sysFile.setType(file.getContentType());
-            sysFile.setSize(file.getSize());
+            sysFile.setName(filename);
+            sysFile.setType(encryptedFile.getContentType());
+            sysFile.setSize(encryptedFile.getSize());
             sysFile.setUrl(targetLocation.toString());
             sysFile.setMd5(md5Checksum);
             sysFile.setProduced(username);
@@ -114,6 +119,8 @@ public class uploadController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+
     //发送AES密钥
     @GetMapping("/aeskey")
     public ResponseEntity<String> getAESKey() {
