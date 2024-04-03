@@ -1,5 +1,6 @@
 package usts.paperms.paperms.service;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.service.impl.InMemoryMultipartFile;
@@ -10,10 +11,16 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 @Service
 public class DecryptFileService {
+    private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
     public MultipartFile decryptFile(MultipartFile encryptedFile, String key) throws IOException {
         try {
             byte[] encryptedData = encryptedFile.getBytes();
@@ -43,5 +50,26 @@ public class DecryptFileService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public String decryptAesKeyToString(String encryptedAesKeyBase64) throws Exception {
+        byte[] privateKeyBytes = Files.readAllBytes(Paths.get(PRIVATE_KEY_FILE_PATH));
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
+        byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);
+
+        // 将解密后的字节数组转换为字符串
+        String decryptedAesKeyString = new String(decryptedAesKeyBytes, "UTF-8");
+
+        return decryptedAesKeyString;
+    }
+    public String calculateMD5(byte[] bytes) {
+        return DigestUtils.md5Hex(bytes);
     }
 }

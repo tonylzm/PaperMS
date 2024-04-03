@@ -72,9 +72,9 @@ public class uploadController {
             }
            //encrypt file
             // Calculate MD5 checksum of the file
-            String decryptedAesKeyString = decryptAesKeyToString(aesKey);
+            String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
             MultipartFile files= DecryptFileService.decryptFile(encryptedFile,decryptedAesKeyString);
-            String md5Checksum = calculateMD5(files.getBytes());
+            String md5Checksum = DecryptFileService.calculateMD5(files.getBytes());
             if(!md5.equals(md5Checksum)){
                 return new ResponseEntity<>("MD5 checksum does not match", HttpStatus.BAD_REQUEST);
             }
@@ -144,32 +144,6 @@ public class uploadController {
             return ResponseEntity.badRequest().build();
         }
     }
-    // Method to calculate MD5 checksum
-    private String calculateMD5(byte[] bytes) {
-        return DigestUtils.md5Hex(bytes);
-    }
-
-    public  String decryptAesKeyToString(String encryptedAesKeyBase64) throws Exception {
-        byte[] privateKeyBytes = Files.readAllBytes(Paths.get(PRIVATE_KEY_FILE_PATH));
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-        byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
-        byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);
-
-        // 将解密后的字节数组转换为字符串
-        String decryptedAesKeyString = new String(decryptedAesKeyBytes, "UTF-8");
-
-        return decryptedAesKeyString;
-    }
-
-
-
-
 
 }
 
