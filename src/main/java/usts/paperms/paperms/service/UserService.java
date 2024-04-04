@@ -50,13 +50,12 @@ public class UserService {
         // 创建密钥对象
         Key key = new Key();
         key.setUsers(savedUser);
+        key.setKeyName(users.getRealName());
         key.setKeyPublic(publicKey);
         key.setKeyPrivate(privateKey);
 
         // 保存密钥对象
         keyRepository.save(key);
-
-
 
         return savedUser;
     }

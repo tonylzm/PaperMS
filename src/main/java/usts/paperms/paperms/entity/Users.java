@@ -18,6 +18,7 @@ public class Users {
 
     private String username;
     private String password;
+    private String realName;
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     private List<UserRole> roles;
