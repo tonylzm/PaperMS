@@ -54,11 +54,17 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Users request) {
+    public ResponseEntity<?> register(@RequestBody Users request) throws Exception {
         // 检查用户名是否已经存在
         if (userService.findUserByUsername(request.getUsername()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
+        String keys=rsaKeyGenerationService.custom_generateKeys();
+        //按换行符分别获取公钥和私钥
+        String[] key=keys.split("\n");
+
+        String publicKey = key[0];
+        String privateKey = key[1];
 
         // 生成随机盐
         String salt = passwordEncryption.generateSalt();
@@ -69,7 +75,7 @@ public class UserController {
         user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息
-        userService.createUserWithRoleAndSalt(user, "user", salt);
+        userService.createUserWithRoleAndSalt(user, "user", salt,publicKey,privateKey);
 
         return ResponseEntity.ok("Registration successful");
     }
@@ -82,6 +88,15 @@ public class UserController {
     @PostMapping("/findrole")
     public ResponseEntity<?> findRoleByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findUserByUsername(request.getUsername()));
+    }
+
+    @PostMapping("/find_public_key")
+    public ResponseEntity<?> findKeyByUsername(@RequestBody Users request) {
+        return ResponseEntity.ok(userService.findPublicKeyByUsername(request.getUsername()));
+    }
+    @PostMapping("/find_private_key")
+    public ResponseEntity<?> findPrivateKeyByUsername(@RequestBody Users request) {
+        return ResponseEntity.ok(userService.findPrivateKeyByUsername(request.getUsername()));
     }
 
     @PostMapping("/login")
@@ -115,7 +130,7 @@ public class UserController {
     public String generateKeys() {
         try {
             // 调用Service层方法生成公钥和私钥
-            aesKeyGenerationService.generateAESKey();
+            rsaKeyGenerationService.generateKeys();
             return "RSA keys generated successfully.";
         } catch (Exception e) {
             e.printStackTrace();

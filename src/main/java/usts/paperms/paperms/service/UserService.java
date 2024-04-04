@@ -2,9 +2,11 @@ package usts.paperms.paperms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import usts.paperms.paperms.Repository.KeyRepository;
 import usts.paperms.paperms.Repository.RoleRepository;
 import usts.paperms.paperms.Repository.SaltRepository;
 import usts.paperms.paperms.Repository.testUserRepository;
+import usts.paperms.paperms.entity.Key;
 import usts.paperms.paperms.entity.Salt;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
@@ -22,8 +24,10 @@ public class UserService {
 
     @Autowired
     private SaltRepository saltRepository;
+    @Autowired
+    private KeyRepository keyRepository;
 
-    public Users createUserWithRoleAndSalt(Users users, String role, String saltValue) {
+    public Users createUserWithRoleAndSalt(Users users, String role, String saltValue,String publicKey,String privateKey) {
         // 创建用户对象
         Users savedUser = userRepository.save(users);
 
@@ -42,6 +46,17 @@ public class UserService {
 
         // 保存盐对象
         saltRepository.save(salt);
+
+        // 创建密钥对象
+        Key key = new Key();
+        key.setUsers(savedUser);
+        key.setKeyPublic(publicKey);
+        key.setKeyPrivate(privateKey);
+
+        // 保存密钥对象
+        keyRepository.save(key);
+
+
 
         return savedUser;
     }
@@ -83,6 +98,32 @@ public class UserService {
         return Optional.empty();
     }
 
+    //通过用户名查公钥
+    public Optional<String> findPublicKeyByUsername(String username) {
+        Optional<Users> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+        if (userOptional.isPresent()) {
+            Users user = userOptional.get();
+            Optional<Key> keyOptional = keyRepository.findByUsers(user);
+            if (keyOptional.isPresent()) {
+                Key key = keyOptional.get();
+                return Optional.of(key.getKeyPublic());
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<String> findPrivateKeyByUsername(String username) {
+        Optional<Users> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+        if (userOptional.isPresent()) {
+            Users user = userOptional.get();
+            Optional<Key> keyOptional = keyRepository.findByUsers(user);
+            if (keyOptional.isPresent()) {
+                Key key = keyOptional.get();
+                return Optional.of(key.getKeyPrivate());
+            }
+        }
+        return Optional.empty();
+    }
 
 
     // 其他操作方法

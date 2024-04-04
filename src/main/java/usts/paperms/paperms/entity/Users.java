@@ -24,4 +24,7 @@ public class Users {
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL)
     private Salt salt;
+
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL)
+    private Key key;
 }
