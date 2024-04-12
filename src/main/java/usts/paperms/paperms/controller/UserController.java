@@ -4,6 +4,7 @@ import cn.hutool.json.JSONObject;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import usts.paperms.paperms.service.JsonConverter;
 import usts.paperms.paperms.service.RSAKeyGenerationService;
 import usts.paperms.paperms.service.UserService;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 
@@ -32,6 +34,8 @@ public class UserController {
     private RSAKeyGenerationService rsaKeyGenerationService;
     @Autowired
     private AESKeyGenerationService aesKeyGenerationService;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     @PostMapping("/create")
     public ResponseEntity<Users> createUserWithRole(@RequestBody CreateUserWithRoleRequest request) {
         // 创建用户对象
@@ -80,6 +84,37 @@ public class UserController {
 
         return ResponseEntity.ok("Registration successful");
     }
+
+
+//生成一次性认证密钥，存在redis中
+    @PostMapping("/test")
+    public ResponseEntity<?> test() throws Exception {
+        String keys=rsaKeyGenerationService.custom_generateKeys();
+        //按换行符分别获取公钥和私钥
+        String[] key=keys.split("\n");
+
+        String publicKey = key[0];
+        String privateKey = key[1];
+        // 序列化并保存公钥到 Redis
+        redisTemplate.opsForValue().set("publicKey:" + "tt", publicKey, Duration.ofSeconds(180));
+        return ResponseEntity.ok("密钥生成完成");
+    }
+    @GetMapping("/getPublicKey/{username}")
+    public ResponseEntity<?> getPublicKey(@PathVariable String username) {
+        // 从 Redis 中读取公钥
+        String publicKey = redisTemplate.opsForValue().get("publicKey:" + username);
+
+        if (publicKey != null) {
+            // 读取一次后从 Redis 中删除该键
+            redisTemplate.delete("publicKey:" + username);
+            return ResponseEntity.ok(publicKey);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
 
     @PostMapping("/findsalt")
     public ResponseEntity<?> findSaltByUsername(@RequestBody Users request) {

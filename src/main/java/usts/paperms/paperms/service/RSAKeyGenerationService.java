@@ -26,18 +26,20 @@ public class RSAKeyGenerationService {
         savePublicKey(publicKey);
         savePrivateKey(privateKey);
     }
+
     //客户生成RSA密钥
     public String custom_generateKeys() throws Exception {
         // Generate key pair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(4096);
+        SecureRandom secureRandom = new SecureRandom();
+        keyPairGenerator.initialize(4096, secureRandom);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
         // 得到公钥和私钥
         PublicKey publicKey = keyPair.getPublic();
         PrivateKey privateKey = keyPair.getPrivate();
 
-        //将公钥密钥转化为字符串
+        // 将公钥密钥转化为字符串
         String publicKeyString = Base64.getEncoder().encodeToString(publicKey.getEncoded());
         String privateKeyString = Base64.getEncoder().encodeToString(privateKey.getEncoded());
 
