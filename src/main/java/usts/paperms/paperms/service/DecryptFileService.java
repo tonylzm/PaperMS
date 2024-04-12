@@ -15,7 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 @Service
@@ -60,6 +62,24 @@ public class DecryptFileService {
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
+        byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);
+
+        // 将解密后的字节数组转换为字符串
+        String decryptedAesKeyString = new String(decryptedAesKeyBytes, "UTF-8");
+
+        return decryptedAesKeyString;
+    }
+    //使用RSA公钥解密AES密钥。RSA密钥为base64编码的字符串
+    public String decryptAesKeyToString(String encryptedAesKeyBase64, String rsaPublicKeyBase64) throws Exception {
+        byte[] publicKeyBytes = Base64.getDecoder().decode(rsaPublicKeyBase64);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = keyFactory.generatePublic(keySpec);
+
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, publicKey);
 
         byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
         byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);

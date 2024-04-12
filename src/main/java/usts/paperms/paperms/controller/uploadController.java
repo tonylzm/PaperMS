@@ -3,6 +3,7 @@ package usts.paperms.paperms.controller;
 // 导入需要的包和类
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.security.PasswordEncryptionService;
 import usts.paperms.paperms.service.DecryptFileService;
 import usts.paperms.paperms.service.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
@@ -48,7 +50,10 @@ public class uploadController {
     private RSAFileEncryptionService rsaFileEncryptionService;
     @Autowired
     private DecryptFileService DecryptFileService;
-
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    @Autowired
+    private PasswordEncryptionService passwordEncryption;
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(//@RequestParam("file") MultipartFile file,
                                                    @RequestParam("username") String username,
@@ -73,6 +78,11 @@ public class uploadController {
            //encrypt file
             // Calculate MD5 checksum of the file
             String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
+            String hashedPassword= redisTemplate.opsForValue().get("hashedPassword:" + username);
+            String password= DecryptFileService.decryptAesKeyToString(hashedPassword);
+            if(!password.equals(decryptedAesKeyString)){
+                return new ResponseEntity<>("AES key does not match", HttpStatus.BAD_REQUEST);
+            }
             MultipartFile files= DecryptFileService.decryptFile(encryptedFile,decryptedAesKeyString);
             String md5Checksum = DecryptFileService.calculateMD5(files.getBytes());
             if(!md5.equals(md5Checksum)){
