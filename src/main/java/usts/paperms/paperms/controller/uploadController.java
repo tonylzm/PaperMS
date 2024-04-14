@@ -1,7 +1,9 @@
 package usts.paperms.paperms.controller;
 
 // 导入需要的包和类
+import cn.hutool.json.JSON;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.StringUtils;
@@ -61,8 +63,18 @@ public class uploadController {
                                                    @RequestParam("md5") String md5,
                                                    @RequestParam("encryptedFile") MultipartFile encryptedFile,
                                                    @RequestParam("fileName") String filename,
-                                                   @RequestParam("aesKey") String aesKey
+                                                   @RequestParam("aesKey") String aesKey,
+                                                   @RequestParam("info") String info
                                                   ) throws Exception {
+        //输出info中包含的信息
+        System.out.println(info);
+        // 解析JSON字符串
+        JSONObject data = new JSONObject(info);
+        // 获取name字段的值
+        String name = data.getString("name");
+        System.out.println(name);
+
+
         if (encryptedFile.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
         }
@@ -104,6 +116,8 @@ public class uploadController {
             sysFile.setFromon(from);
             sysFile.setDelete(false);
             sysFile.setEnable(true);
+            sysFile.setClasses(data.getString("class"));
+            sysFile.setCollege(data.getString("college"));
             sysFileService.save(sysFile);
 
             return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);

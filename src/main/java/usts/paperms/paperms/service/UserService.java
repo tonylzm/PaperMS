@@ -1,6 +1,8 @@
 package usts.paperms.paperms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import usts.paperms.paperms.Repository.KeyRepository;
 import usts.paperms.paperms.Repository.RoleRepository;
@@ -124,6 +126,14 @@ public class UserService {
         return Optional.empty();
     }
 
+    //分页输出所有用户
+    public List<Users> findAllUser() {
+        return userRepository.findAll();
+    }
+
+    public Page<Users> findByUsernameContaining(String username, Pageable pageable) {
+        return userRepository.findByUsernameContaining(username, pageable);
+    }
 
     // 其他操作方法
 }

@@ -39,6 +39,29 @@ public class fileController {
         // 构造返回结果
         return Result.success(page);
     }
+
+    @GetMapping(value = "/pageByCollege", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public  Result findPageByCollege(@RequestParam Integer pageNum,
+                            @RequestParam Integer pageSize,
+                            @RequestParam(defaultValue = "") String college) {
+        // 调用 SysFileService 的方法执行分页查询
+        Page<SysFile> page = sysFileService.findPageByCollege(pageNum, pageSize, college);
+        // 构造返回结果
+        return Result.success(page);
+    }
+
+    @GetMapping(value = "/pageByProduced", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public  Result findPageByProduced(@RequestParam Integer pageNum,
+                            @RequestParam Integer pageSize,
+                            @RequestParam(defaultValue = "") String produced) {
+        // 调用 SysFileService 的方法执行分页查询
+        Page<SysFile> page = sysFileService.findPageByProduced(pageNum, pageSize, produced);
+        // 构造返回结果
+        return Result.success(page);
+    }
+
     @GetMapping("/preview")
     public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName) {
         try {

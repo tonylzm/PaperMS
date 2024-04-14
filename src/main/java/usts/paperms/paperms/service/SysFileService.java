@@ -28,5 +28,19 @@ public class SysFileService {
         return sysFileRepository.findByNameContaining(name, pageable);
     }
 
+    public Page<SysFile> findPageByCollege(Integer pageNum, Integer pageSize, String college) {
+        // 构建分页请求对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        // 调用 Spring Data JPA 的方法执行分页查询
+        return sysFileRepository.findByCollegeContaining(college, pageable);
+    }
+
+    public Page<SysFile> findPageByProduced(Integer pageNum, Integer pageSize, String produced) {
+        // 构建分页请求对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        // 调用 Spring Data JPA 的方法执行分页查询
+        return sysFileRepository.findByProducedContaining(produced, pageable);
+    }
+
     // Other methods as needed (e.g., findById, findAll, delete, etc.)
 }

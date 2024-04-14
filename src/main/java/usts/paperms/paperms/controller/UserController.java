@@ -136,10 +136,10 @@ public class UserController {
             return ResponseEntity.ok("非法登录");
         }
 
-        redisTemplate.opsForValue().set("username:" + username, username, Duration.ofSeconds(60));
-        redisTemplate.opsForValue().set("time:" + username, time, Duration.ofSeconds(60));
-        redisTemplate.opsForValue().set("ipAddress:" + username, ipAddress, Duration.ofSeconds(60));
-        redisTemplate.opsForValue().set("hashedPassword:" + username, hashedPassword, Duration.ofSeconds(60));
+        redisTemplate.opsForValue().set("username:" + username, username, Duration.ofSeconds(120));
+        redisTemplate.opsForValue().set("time:" + username, time, Duration.ofSeconds(120));
+        redisTemplate.opsForValue().set("ipAddress:" + username, ipAddress, Duration.ofSeconds(120));
+        redisTemplate.opsForValue().set("hashedPassword:" + username, hashedPassword, Duration.ofSeconds(120));
         return ResponseEntity.ok("认证信息生成完成");
     }
     @GetMapping("/getPublicKey/{username}")
@@ -210,6 +210,9 @@ public class UserController {
         return ResponseEntity.ok(userService.findPrivateKeyByUsername(request.getUsername()));
     }
 
+
+
+
     @PostMapping("/login")
     public Result<?> login(@RequestBody LoginRequest loginRequest) {
         Users user = userService.findUserByUsername(loginRequest.getUsername());
@@ -221,11 +224,11 @@ public class UserController {
         data.put("role", userService.findRoleByUsername(loginRequest.getUsername()).get());
         data.put("username", loginRequest.getUsername());
         String json = JsonConverter.convertToJson(data);
-
         JSONObject jsonObject = new JSONObject(json);
-
         return Result.ok("Login successful").body(jsonObject);
     }
+
+
 
     @Setter
     @Getter

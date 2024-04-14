@@ -11,5 +11,9 @@ public interface SysFileRepository extends JpaRepository<SysFile, Long> {
     SysFile findByName(String fileName);
 
     Page<SysFile> findByNameContaining(String name, Pageable pageable);
+
+    Page<SysFile> findByCollegeContaining(String classes, Pageable pageable);
+
+    Page<SysFile> findByProducedContaining(String produced, Pageable pageable);
     // You can define custom queries if needed
 }

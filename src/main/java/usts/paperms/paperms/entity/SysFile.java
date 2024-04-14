@@ -40,11 +40,17 @@ public class SysFile {
     @Column(name = "enable")
     private boolean enable;
 
+    @Column(name ="classes")
+    private String classes;
+
+    @Column(name ="college")
+    private String college;
+
     // Constructors, getters and setters
     public SysFile() {
     }
 
-    public SysFile(String name, String type, Long size, String url, String md5, String produced,String fromon,boolean isDelete, boolean enable) {
+    public SysFile(String name, String type, Long size, String url, String md5, String produced,String fromon,boolean isDelete, boolean enable,String classes,String college) {
         this.name = name;
         this.type = type;
         this.size = size;
@@ -54,6 +60,8 @@ public class SysFile {
         this.fromon=fromon;
         this.isDelete = isDelete;
         this.enable = enable;
+        this.classes=classes;
+        this.college=college;
     }
 
 

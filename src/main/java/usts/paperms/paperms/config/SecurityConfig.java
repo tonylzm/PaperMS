@@ -14,5 +14,4 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .allowedHeaders("Authorization", "Content-Type") // 添加请求头
                 .allowCredentials(true);
     }
-
 }
