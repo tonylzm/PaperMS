@@ -133,7 +133,7 @@ public class UserController {
 
         //如果country不在江苏省，返回错误信息
         if(!province.equals("江苏省") && !city.equals("苏州市")){
-            return ResponseEntity.ok("非法登录");
+            return ResponseEntity.badRequest().body("非法访问");
         }
 
         redisTemplate.opsForValue().set("username:" + username, username, Duration.ofSeconds(120));
