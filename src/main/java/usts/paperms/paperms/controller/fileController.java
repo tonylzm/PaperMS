@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
-import usts.paperms.paperms.service.RSAFileEncryptionService;
+import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
 
@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
@@ -95,9 +94,13 @@ public class fileController {
             if (!Files.exists(Paths.get(filePath))) {
                 return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
             }
-
             //文件解密
             rsaFileEncryptionService.decryptFile(new File(filePath));
+            //将相应文件在数据库中isDecrypted字段设置为false
+            SysFile sysFile = sysFileService.findByName(fileName);
+            sysFile.setDecrypt(true);
+            sysFileService.save(sysFile);
+
             return ResponseEntity.ok("File decrypted successfully");
         } catch (IOException e) {
             e.printStackTrace();

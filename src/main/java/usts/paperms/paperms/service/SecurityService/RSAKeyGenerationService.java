@@ -1,4 +1,4 @@
-package usts.paperms.paperms.service;
+package usts.paperms.paperms.service.SecurityService;
 
 import org.springframework.stereotype.Service;
 import java.io.FileOutputStream;

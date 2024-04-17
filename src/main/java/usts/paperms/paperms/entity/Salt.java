@@ -14,6 +14,7 @@ public class Salt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference
     @OneToOne
     @JoinColumn(name = "salt_id", referencedColumnName = "id")
     private Users users;

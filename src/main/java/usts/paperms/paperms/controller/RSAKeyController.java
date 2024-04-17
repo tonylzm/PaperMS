@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import usts.paperms.paperms.entity.Key;
 import usts.paperms.paperms.service.KeyService;
-import usts.paperms.paperms.service.RSAKeyGenerationService;
+import usts.paperms.paperms.service.SecurityService.RSAKeyGenerationService;
 
 @Controller
 @RequestMapping("/api/RSA")

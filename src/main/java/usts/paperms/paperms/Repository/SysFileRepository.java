@@ -3,6 +3,8 @@ package usts.paperms.paperms.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import usts.paperms.paperms.entity.SysFile;
 
@@ -15,5 +17,9 @@ public interface SysFileRepository extends JpaRepository<SysFile, Long> {
     Page<SysFile> findByCollegeContaining(String classes, Pageable pageable);
 
     Page<SysFile> findByProducedContaining(String produced, Pageable pageable);
+
+    @Query(value ="SELECT f.*  FROM `sys_file` f  JOIN `sys_check` c ON f.`id` = c.`check_id` WHERE c.`check_status` = :checkStatus and f.`college`=:college", nativeQuery = true)
+    Page<SysFile> findFilesByClassCheck(@Param("checkStatus") String checkStatus,@Param("college") String college, Pageable pageable);
+
     // You can define custom queries if needed
 }

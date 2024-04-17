@@ -1,5 +1,6 @@
 package usts.paperms.paperms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,8 +35,8 @@ public class SysFile {
     @Column(name="fromon")
     private String fromon;
 
-    @Column(name = "is_delete")
-    private boolean isDelete;
+    @Column(name = "is_decrypt")
+    private boolean decrypt;
 
     @Column(name = "enable")
     private boolean enable;
@@ -46,11 +47,17 @@ public class SysFile {
     @Column(name ="college")
     private String college;
 
+    @OneToOne(mappedBy = "sysFile",cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Check check;
+
     // Constructors, getters and setters
     public SysFile() {
     }
 
-    public SysFile(String name, String type, Long size, String url, String md5, String produced,String fromon,boolean isDelete, boolean enable,String classes,String college) {
+    public SysFile(String name, String type, Long size, String url, String md5,
+                   String produced,String fromon,boolean decrypt, boolean enable,
+                   String classes,String college) {
         this.name = name;
         this.type = type;
         this.size = size;
@@ -58,7 +65,7 @@ public class SysFile {
         this.md5 = md5;
         this.produced= produced;
         this.fromon=fromon;
-        this.isDelete = isDelete;
+        this.decrypt = decrypt;
         this.enable = enable;
         this.classes=classes;
         this.college=college;

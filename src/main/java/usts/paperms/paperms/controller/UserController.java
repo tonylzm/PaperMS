@@ -1,9 +1,6 @@
 package usts.paperms.paperms.controller;
 
 import cn.hutool.json.JSONObject;
-import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.maxmind.geoip2.model.CityResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.LoginRequest;
-import usts.paperms.paperms.entity.User;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
-import usts.paperms.paperms.service.AESKeyGenerationService;
-import usts.paperms.paperms.service.JsonConverter;
-import usts.paperms.paperms.service.RSAKeyGenerationService;
+import usts.paperms.paperms.service.SecurityService.AESKeyGenerationService;
+import usts.paperms.paperms.service.SecurityService.JsonConverter;
+import usts.paperms.paperms.service.SecurityService.RSAKeyGenerationService;
 import usts.paperms.paperms.service.UserService;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
@@ -66,6 +59,7 @@ public class UserController {
         return ResponseEntity.ok(savedUser);
     }
 
+    //出卷人注册方法
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Users request) throws Exception {
         // 检查用户名是否已经存在
@@ -90,10 +84,36 @@ public class UserController {
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息
         userService.createUserWithRoleAndSalt(user, "user", salt,publicKey,privateKey);
-
         return ResponseEntity.ok("Registration successful");
     }
 
+    //审批人(系)注册方法
+    @PostMapping("/check_register")
+    public ResponseEntity<?> check_register(@RequestBody Users request) throws Exception {
+        // 检查用户名是否已经存在
+        if (userService.findUserByUsername(request.getUsername()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+        }
+        String keys=rsaKeyGenerationService.custom_generateKeys();
+        //按换行符分别获取公钥和私钥
+        String[] key=keys.split("\n");
+
+        String publicKey = key[0];
+        String privateKey = key[1];
+
+        // 生成随机盐
+        String salt = passwordEncryption.generateSalt();
+
+        // 创建用户对象
+        Users user = new Users();
+        user.setRealName(request.getRealName());
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
+        // 其他用户信息...
+        // 创建用户角色并保存用户信息和角色信息
+        userService.createUserWithRoleAndSalt(user, "check", salt,publicKey,privateKey);
+        return ResponseEntity.ok("Registration successful");
+    }
 
 //生成一次性认证密钥，存在redis中
     @PostMapping("/test")

@@ -1,12 +1,8 @@
 package usts.paperms.paperms.controller;
 
 // 导入需要的包和类
-import cn.hutool.json.JSON;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONObject;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
@@ -15,21 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.security.PasswordEncryptionService;
-import usts.paperms.paperms.service.DecryptFileService;
-import usts.paperms.paperms.service.RSAFileEncryptionService;
+import usts.paperms.paperms.service.SecurityService.DecryptFileService;
+import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
 
-import javax.crypto.Cipher;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 
@@ -66,14 +57,6 @@ public class uploadController {
                                                    @RequestParam("aesKey") String aesKey,
                                                    @RequestParam("info") String info
                                                   ) throws Exception {
-        //输出info中包含的信息
-        System.out.println(info);
-        // 解析JSON字符串
-        JSONObject data = new JSONObject(info);
-        // 获取name字段的值
-        String name = data.getString("name");
-        System.out.println(name);
-
 
         if (encryptedFile.isEmpty()) {
             return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
@@ -87,7 +70,7 @@ public class uploadController {
             if (!encryptedFile.getContentType().equalsIgnoreCase("application/pdf")) {
                 return new ResponseEntity<>("Only PDF files are allowed", HttpStatus.BAD_REQUEST);
             }
-           //encrypt file
+            JSONObject data = new JSONObject(info);
             // Calculate MD5 checksum of the file
             String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
             String hashedPassword= redisTemplate.opsForValue().get("hashedPassword:" + username);
@@ -104,22 +87,27 @@ public class uploadController {
             // Copy file to the target location
             Path targetLocation = Paths.get(UPLOAD_DIR).resolve(filename);
             Files.copy(encryptedFiles.toPath(), targetLocation);
-
-            // Save file information to the database
-            SysFile sysFile = new SysFile();
-            sysFile.setName(filename);
-            sysFile.setType(encryptedFile.getContentType());
-            sysFile.setSize(encryptedFile.getSize());
-            sysFile.setUrl(targetLocation.toString());
-            sysFile.setMd5(md5Checksum);
-            sysFile.setProduced(username);
-            sysFile.setFromon(from);
-            sysFile.setDelete(false);
-            sysFile.setEnable(true);
-            sysFile.setClasses(data.getString("class"));
-            sysFile.setCollege(data.getString("college"));
-            sysFileService.save(sysFile);
-
+            //如果文件名重复，那么就将Delete设置为false
+            SysFile duplicateFiles=sysFileService.findByName(filename);
+            //如果存在数据库中，那么就将Decrypt设置为false;如果不存在，那么就将文件信息存入数据库
+            if(duplicateFiles!=null){
+                duplicateFiles.setDecrypt(false);
+                sysFileService.save(duplicateFiles);
+            }else {
+                SysFile sysFile = new SysFile();
+                sysFile.setName(filename);
+                sysFile.setType(encryptedFile.getContentType());
+                sysFile.setSize(encryptedFile.getSize());
+                sysFile.setUrl(targetLocation.toString());
+                sysFile.setMd5(md5Checksum);
+                sysFile.setProduced(username);
+                sysFile.setFromon(from);
+                sysFile.setDecrypt(false);
+                sysFile.setEnable(true);
+                sysFile.setClasses(data.getString("class"));
+                sysFile.setCollege(data.getString("college"));
+                sysFileService.save(sysFile);
+            }
             return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);
         } catch (IOException ex) {
             return new ResponseEntity<>("Could not store the file. Please try again!", HttpStatus.INTERNAL_SERVER_ERROR);

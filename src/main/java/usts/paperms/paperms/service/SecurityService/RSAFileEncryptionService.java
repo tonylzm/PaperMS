@@ -1,4 +1,4 @@
-package usts.paperms.paperms.service;
+package usts.paperms.paperms.service.SecurityService;
 
 
 import org.springframework.stereotype.Service;
@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -95,6 +96,9 @@ public class RSAFileEncryptionService {
             try(FileOutputStream fileOutputStream = new FileOutputStream(ENCRYPTED_FILE_DIRECTORY + encryptedFile.getName())) {
                 fileOutputStream.write(decryptedBytes);
             }
+            //将AES密钥文件删除
+            Path path = Path.of(AES_KEY_FILE_PATH + encryptedFile.getName() + ".key");
+            Files.delete(path);
         }
     }
 

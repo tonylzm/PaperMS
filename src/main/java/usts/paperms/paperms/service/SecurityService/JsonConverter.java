@@ -1,4 +1,4 @@
-package usts.paperms.paperms.service;
+package usts.paperms.paperms.service.SecurityService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
