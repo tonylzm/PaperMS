@@ -2,16 +2,14 @@ package usts.paperms.paperms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import usts.paperms.paperms.Repository.KeyRepository;
 import usts.paperms.paperms.Repository.RoleRepository;
 import usts.paperms.paperms.Repository.SaltRepository;
 import usts.paperms.paperms.Repository.testUserRepository;
-import usts.paperms.paperms.entity.Key;
-import usts.paperms.paperms.entity.Salt;
-import usts.paperms.paperms.entity.UserRole;
-import usts.paperms.paperms.entity.Users;
+import usts.paperms.paperms.entity.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +34,7 @@ public class UserService {
         // 创建角色对象
         UserRole roleObj = new UserRole();
         roleObj.setRole(role);
+
         roleObj.setUsers(savedUser);
 
         // 保存角色对象
@@ -133,6 +132,14 @@ public class UserService {
 
     public Page<Users> findByUsernameContaining(String username, Pageable pageable) {
         return userRepository.findByUsernameContaining(username, pageable);
+    }
+
+    //分页查找classCheck通过的文件，两个表关联查询
+    public Page<Users> findPageByClassCheck(Integer pageNum, Integer pageSize, String role, String college) {
+        // 构建分页请求对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        // 调用 Spring Data JPA 的方法执行分页查询
+        return userRepository.findUsersByUserRole(role, college,pageable);
     }
 
     // 其他操作方法

@@ -15,10 +15,11 @@ public class UserRole {
     private Long id;
 
     @JsonBackReference
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Users users;
 
+    @Column(name = "role")
     private String role;
 
     // Getters and setters

@@ -4,6 +4,10 @@ import cn.hutool.json.JSONObject;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.LoginRequest;
+import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
@@ -51,7 +56,7 @@ public class UserController {
 
         // 将用户和角色关联
         role.setUsers(user);
-        user.setRoles(Collections.singletonList(role));
+        user.setUserRole(role);
 
         // 保存用户信息及角色信息
         Users savedUser = userService.createUser(user);
@@ -80,6 +85,7 @@ public class UserController {
         Users user = new Users();
         user.setRealName(request.getRealName());
         user.setUsername(request.getUsername());
+        user.setCollege(request.getCollege());
         user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息
@@ -113,6 +119,15 @@ public class UserController {
         // 创建用户角色并保存用户信息和角色信息
         userService.createUserWithRoleAndSalt(user, "check", salt,publicKey,privateKey);
         return ResponseEntity.ok("Registration successful");
+    }
+    //查找相应权限的用户
+    @PostMapping("/userrole")
+    public Result findCheckedfile(@RequestParam Integer pageNum,
+                                  @RequestParam Integer pageSize,
+                                  @RequestParam("college")String college,
+                                  @RequestParam("role")String role) {
+        Page<Users> page=userService.findPageByClassCheck(pageNum,pageSize,role,college);
+        return Result.success(page);
     }
 
 //生成一次性认证密钥，存在redis中

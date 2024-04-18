@@ -17,19 +17,24 @@ public class Users {
     private Long id;
 
 
+    @Column(name = "username")
     private String username;
+    @Column(name = "password")
     private String password;
+    @Column(name = "real_name")
     private String realName;
+    @Column(name = "college")
+    private String college;
 
-    @JsonBackReference
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    private List<UserRole> roles;
 
-    @JsonBackReference
-    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private UserRole userRole;
+
+
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private Salt salt;
 
-    @JsonBackReference
-    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL)
+
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private Key key;
 }
