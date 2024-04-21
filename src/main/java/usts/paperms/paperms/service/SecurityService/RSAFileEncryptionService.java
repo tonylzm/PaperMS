@@ -52,7 +52,7 @@ public class RSAFileEncryptionService {
         return keyFactory.generatePublic(spec);
     }
 
-    // 加密文件
+    // 加密文件（文件为MultipartFile类型）
     public File encryptFile(MultipartFile inputFile,String filename) throws Exception {
         // 生成AES密钥
         SecretKey aesKey = generateAESKey();
@@ -77,6 +77,32 @@ public class RSAFileEncryptionService {
         }
         return encryptedFile;
     }
+    //加密文件（文件为byte[]类型）
+    public File encryptFiles(byte[] inputFile,String filename) throws Exception {
+        // 生成AES密钥
+        SecretKey aesKey = generateAESKey();
+
+        // 将AES密钥加密
+        byte[] encryptedAESKey = encryptAESKey(aesKey);
+
+        // 加密文件内容
+        Cipher aesCipher = Cipher.getInstance("AES");
+        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+        File encryptedFile = new File(ENCRYPTED_FILE_DIRECTORY + filename);
+        try (InputStream fileInputStream = new ByteArrayInputStream(inputFile);
+             OutputStream fileOutputStream = new FileOutputStream(encryptedFile)) {
+            byte[] inputBytes = fileInputStream.readAllBytes();
+            byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
+            fileOutputStream.write(encryptedBytes);
+        }
+
+        // 将加密后的AES密钥写入文件
+        try (OutputStream fileOutputStream = new FileOutputStream(AES_KEY_FILE_PATH +  filename + ".key")) {
+            fileOutputStream.write(encryptedAESKey);
+        }
+        return encryptedFile;
+    }
+
     public void decryptFile(File encryptedFile) throws Exception {
         // 从文件中读取加密的AES密钥
         byte[] encryptedAESKey;

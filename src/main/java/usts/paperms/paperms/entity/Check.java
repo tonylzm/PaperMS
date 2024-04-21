@@ -17,7 +17,7 @@ public class Check {
 
     @JsonBackReference
     @OneToOne
-    @JoinColumn(name = "check_id", referencedColumnName = "id")
+    @JoinColumn(name = "check_id", referencedColumnName = "id",unique = true)
     private SysFile sysFile;
 
     @Column(name="class_check")

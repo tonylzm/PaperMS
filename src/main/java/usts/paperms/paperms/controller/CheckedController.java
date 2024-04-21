@@ -23,7 +23,7 @@ public class CheckedController {
     public ResponseEntity<String> classChecked(@RequestParam("fileName") String filename,
                                                @RequestParam("classCheck") String classCheck,
                                                @RequestParam("opinion") String opinion,
-                                               @RequestParam("status") String status) {
+                                               @RequestParam("status") String status) throws Exception {
 
         sysFileService.updateClassCheckByFileName(filename, classCheck, opinion,status);
         return ResponseEntity.ok("Class check successful");
@@ -43,8 +43,9 @@ public class CheckedController {
     @PostMapping("/findCheckedfile")
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
-                                  @RequestParam("college")String college) {
-        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,"系主任通过",college);
+                                  @RequestParam("college")String college,
+                                  @RequestParam("status") String status) {
+        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,status,college);
         return Result.success(page);
     }
 

@@ -1,6 +1,7 @@
 package usts.paperms.paperms.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,13 +29,16 @@ public class Users {
 
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonIgnore
     private UserRole userRole;
 
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonIgnore
     private Salt salt;
 
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonIgnore
     private Key key;
 }

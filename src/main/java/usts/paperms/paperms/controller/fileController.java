@@ -1,3 +1,9 @@
+/**
+ * 文件控制器
+ * 用于处理文件上传、下载、预览、解密等操作
+ * 编写者： tonylzm
+ * 邮箱：3071247462@qq.com
+ */
 package usts.paperms.paperms.controller;
 
 
@@ -38,7 +44,7 @@ public class fileController {
         // 构造返回结果
         return Result.success(page);
     }
-
+    //将文件按照学院信息进行分页输出
     @GetMapping(value = "/pageByCollege", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public  Result findPageByCollege(@RequestParam Integer pageNum,
@@ -51,7 +57,6 @@ public class fileController {
     }
 
     @GetMapping(value = "/pageByProduced", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public  Result findPageByProduced(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
                             @RequestParam(defaultValue = "") String produced) {
@@ -60,18 +65,16 @@ public class fileController {
         // 构造返回结果
         return Result.success(page);
     }
-
+    //文件预览方法
     @GetMapping("/preview")
     public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName) {
         try {
             // 构建文件路径
             String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
-
             // 检查文件是否存在
             if (!Files.exists(Paths.get(filePath))) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
-
             // 读取文件内容并返回给客户端
             byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
             return ResponseEntity.ok()
@@ -84,6 +87,7 @@ public class fileController {
             throw new RuntimeException(e);
         }
     }
+    //文件解密方法
     @PostMapping("/decrypt")
     public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName) {
         try {

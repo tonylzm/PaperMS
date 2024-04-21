@@ -12,6 +12,10 @@ import usts.paperms.paperms.entity.SysFile;
 public interface SysFileRepository extends JpaRepository<SysFile, Long> {
     SysFile findByName(String fileName);
 
+    //按照文件名对文件加密状态进行更新
+    @Query(value = "UPDATE `sys_file` SET `is_decrypt` = :decrypt WHERE `name` = :fileName", nativeQuery = true)
+    void updateIsDecryptedByFileName(@Param("fileName") String fileName, @Param("decrypt") boolean decrypt);
+
     Page<SysFile> findByNameContaining(String name, Pageable pageable);
 
     Page<SysFile> findByCollegeContaining(String classes, Pageable pageable);
