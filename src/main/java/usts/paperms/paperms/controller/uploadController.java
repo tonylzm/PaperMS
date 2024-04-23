@@ -48,8 +48,7 @@ public class uploadController {
     @Autowired
     private PasswordEncryptionService passwordEncryption;
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(//@RequestParam("file") MultipartFile file,
-                                                   @RequestParam("username") String username,
+    public ResponseEntity<String> handleFileUpload(@RequestParam("username") String username,
                                                    @RequestParam("from") String from,
                                                    @RequestParam("md5") String md5,
                                                    @RequestParam("encryptedFile") MultipartFile encryptedFile,
@@ -59,58 +58,55 @@ public class uploadController {
                                                   ) throws Exception {
 
         if (encryptedFile.isEmpty()) {
-            return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("没有接收到文件资料", HttpStatus.BAD_REQUEST);
         }
-
+        String checkStatus = sysFileService.findCheckByFileName(filename).orElse("未审核");
+        if(!checkStatus.equals("未审核")){
+            return new ResponseEntity<>("文件正在审核，请不要重复提交！", HttpStatus.BAD_REQUEST);
+        }
         try {
             if (filename.contains("..")) {
-                return new ResponseEntity<>("Filename contains invalid path sequence", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("文件名包含无效的路径序列", HttpStatus.BAD_REQUEST);
             }
-            // Check if the file is a PDF
+            // 检查文件是否为 PDF
             if (!encryptedFile.getContentType().equalsIgnoreCase("application/pdf")) {
-                return new ResponseEntity<>("Only PDF files are allowed", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("只接收PDF格式文件，请检查", HttpStatus.BAD_REQUEST);
             }
             JSONObject data = new JSONObject(info);
-            // Calculate MD5 checksum of the file
+            // 计算文件的 MD5 校验和
             String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
             String hashedPassword= redisTemplate.opsForValue().get("hashedPassword:" + username);
+            //输出hashedPassword
+            System.out.println(hashedPassword);
             String password= DecryptFileService.decryptAesKeyToString(hashedPassword);
             if(!password.equals(decryptedAesKeyString)){
-                return new ResponseEntity<>("AES key does not match", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("AES密钥匹配失败", HttpStatus.BAD_REQUEST);
             }
             MultipartFile files= DecryptFileService.decryptFile(encryptedFile,decryptedAesKeyString);
             String md5Checksum = DecryptFileService.calculateMD5(files.getBytes());
             if(!md5.equals(md5Checksum)){
-                return new ResponseEntity<>("MD5 checksum does not match", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("文件完整性检查不通过", HttpStatus.BAD_REQUEST);
             }
             File encryptedFiles = rsaFileEncryptionService.encryptFile(files,filename);
-            // Copy file to the target location
+            // 将文件复制到目标位置
             Path targetLocation = Paths.get(UPLOAD_DIR).resolve(filename);
             Files.copy(encryptedFiles.toPath(), targetLocation);
-            //如果文件名重复，那么就将Delete设置为false
-            SysFile duplicateFiles=sysFileService.findByName(filename);
-            //如果存在数据库中，那么就将Decrypt设置为false;如果不存在，那么就将文件信息存入数据库
-            if(duplicateFiles!=null){
-                duplicateFiles.setDecrypt(false);
-                sysFileService.save(duplicateFiles);
-            }else {
-                SysFile sysFile = new SysFile();
-                sysFile.setName(filename);
-                sysFile.setType(encryptedFile.getContentType());
-                sysFile.setSize(encryptedFile.getSize());
-                sysFile.setUrl(targetLocation.toString());
-                sysFile.setMd5(md5Checksum);
-                sysFile.setProduced(username);
-                sysFile.setFromon(from);
-                sysFile.setDecrypt(false);
-                sysFile.setEnable(true);
-                sysFile.setClasses(data.getString("class"));
-                sysFile.setCollege(data.getString("college"));
-                sysFileService.save(sysFile);
-            }
-            return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);
+            SysFile sysFile = new SysFile();
+            sysFile.setName(filename);
+            sysFile.setType(encryptedFile.getContentType());
+            sysFile.setSize(encryptedFile.getSize());
+            sysFile.setUrl(targetLocation.toString());
+            sysFile.setMd5(md5Checksum);
+            sysFile.setProduced(username);
+            sysFile.setFromon(from);
+            sysFile.setDecrypt(false);
+            sysFile.setEnable(true);
+            sysFile.setClasses(data.getString("class"));
+            sysFile.setCollege(data.getString("college"));
+            sysFileService.save(sysFile);
+            return new ResponseEntity<>("文件上传成功", HttpStatus.OK);
         } catch (IOException ex) {
-            return new ResponseEntity<>("Could not store the file. Please try again!", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("无法存储文件，请再试一次！", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

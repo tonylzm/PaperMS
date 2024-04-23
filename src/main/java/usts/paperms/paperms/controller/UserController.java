@@ -1,3 +1,8 @@
+/**
+ * 用户控制器类
+ * 主要包含用户注册、登录等功能
+ * 包含用户IP检查功能，包含生成RSA密钥对功能
+ */
 package usts.paperms.paperms.controller;
 
 import cn.hutool.json.JSONObject;
@@ -49,18 +54,14 @@ public class UserController {
         Users user = new Users();
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
-
         // 创建角色对象
         UserRole role = new UserRole();
         role.setRole("admin");
-
         // 将用户和角色关联
         role.setUsers(user);
         user.setUserRole(role);
-
         // 保存用户信息及角色信息
         Users savedUser = userService.createUser(user);
-
         return ResponseEntity.ok(savedUser);
     }
 
@@ -74,13 +75,10 @@ public class UserController {
         String keys=rsaKeyGenerationService.custom_generateKeys();
         //按换行符分别获取公钥和私钥
         String[] key=keys.split("\n");
-
         String publicKey = key[0];
         String privateKey = key[1];
-
         // 生成随机盐
         String salt = passwordEncryption.generateSalt();
-
         // 创建用户对象
         Users user = new Users();
         user.setRealName(request.getRealName());
@@ -103,13 +101,10 @@ public class UserController {
         String keys=rsaKeyGenerationService.custom_generateKeys();
         //按换行符分别获取公钥和私钥
         String[] key=keys.split("\n");
-
         String publicKey = key[0];
         String privateKey = key[1];
-
         // 生成随机盐
         String salt = passwordEncryption.generateSalt();
-
         // 创建用户对象
         Users user = new Users();
         user.setRealName(request.getRealName());
@@ -129,19 +124,9 @@ public class UserController {
         Page<Users> page=userService.findPageByClassCheck(pageNum,pageSize,role,college);
         return Result.success(page);
     }
-
-//生成一次性认证密钥，存在redis中
+    //解析IP地址，并且判断用户是否存在异常访问
     @PostMapping("/test")
     public ResponseEntity<?> test(@RequestBody Map<String, Object> data) throws Exception {
-//        String keys=rsaKeyGenerationService.custom_generateKeys();
-//        //按换行符分别获取公钥和私钥
-//        String[] key=keys.split("\n");
-//
-//        String publicKey = key[0];
-//        String privateKey = key[1];
-//        // 序列化并保存公钥到 Redis
-//        redisTemplate.opsForValue().set("publicKey:" + "tt", publicKey, Duration.ofSeconds(180));
-//        return ResponseEntity.ok("密钥生成完成");
         //将username，time,ip信息存储到redis中
         String username = (String) data.get("username");
         String time = (String) data.get("time");
@@ -181,7 +166,6 @@ public class UserController {
     public ResponseEntity<?> getPublicKey(@PathVariable String username) {
         // 从 Redis 中读取公钥
         String ipAddress= redisTemplate.opsForValue().get("ipAddress:" + username);
-
 //        // 解析IP地址的地理位置
 //        String country = "Unknown";
 //        String city = "Unknown";
@@ -202,7 +186,6 @@ public class UserController {
         String url = "http://api.map.baidu.com/location/ip?ak=" + BAIDU_MAP_API_KEY + "&ip=" + ipAddress;
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(url, String.class);
-
         // 解析响应并输出地址信息
         // 这里需要根据百度地图API的返回结果进行解析，具体实现需要根据返回的 JSON 结果进行处理
         // 省略了解析过程，你需要根据实际情况解析响应并提取地址信息
@@ -210,22 +193,19 @@ public class UserController {
         JSONObject jsonResponse = new JSONObject(response);
         JSONObject content = jsonResponse.getJSONObject("content");
         JSONObject addressDetail = content.getJSONObject("address_detail");
-
         // 提取国家、省份和城市信息
-        String country = "中国"; // 默认为中国，因为百度地图API返回的是国内IP地址
+        String country = "中国";
         String province = addressDetail.getStr("province");
         String city = addressDetail.getStr("city");
-
         // 构造明文地址信息
         String plaintextAddress = country + " " + province + " " + city;
-
         return ResponseEntity.ok(plaintextAddress);
     }
 
 
 
 
-
+    //输出用户某些基本信息
     @PostMapping("/findsalt")
     public ResponseEntity<?> findSaltByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findSaltByUsername(request.getUsername()));
@@ -247,7 +227,7 @@ public class UserController {
 
 
 
-
+    //登录方法实现
     @PostMapping("/login")
     public Result<?> login(@RequestBody LoginRequest loginRequest) {
         Users user = userService.findUserByUsername(loginRequest.getUsername());
@@ -258,6 +238,8 @@ public class UserController {
         Map<String, Object> data = JsonConverter.createMap();
         data.put("role", userService.findRoleByUsername(loginRequest.getUsername()).get());
         data.put("username", loginRequest.getUsername());
+        data.put("realName", user.getRealName());
+        data.put("college", user.getCollege());
         String json = JsonConverter.convertToJson(data);
         JSONObject jsonObject = new JSONObject(json);
         return Result.ok("Login successful").body(jsonObject);
@@ -270,11 +252,10 @@ public class UserController {
     public static class CreateUserWithRoleRequest {
         private String username;
         private String password;
-
         // 省略getter和setter方法
     }
 
-
+    //密钥生成方法
     @GetMapping("/generate")
     public String generateKeys() {
         try {

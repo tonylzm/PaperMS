@@ -39,8 +39,6 @@ public class fileController {
                             @RequestParam(defaultValue = "") String name) {
         // 调用 SysFileService 的方法执行分页查询
         Page<SysFile> page = sysFileService.findPage(pageNum, pageSize, name);
-
-
         // 构造返回结果
         return Result.success(page);
     }
@@ -59,9 +57,10 @@ public class fileController {
     @GetMapping(value = "/pageByProduced", produces = MediaType.APPLICATION_JSON_VALUE)
     public  Result findPageByProduced(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
-                            @RequestParam(defaultValue = "") String produced) {
+                            @RequestParam("produced") String produced,
+                            @RequestParam(defaultValue = "") String name) {
         // 调用 SysFileService 的方法执行分页查询
-        Page<SysFile> page = sysFileService.findPageByProduced(pageNum, pageSize, produced);
+        Page<SysFile> page = sysFileService.findPageByProduced(pageNum, pageSize, produced, name);
         // 构造返回结果
         return Result.success(page);
     }
@@ -112,5 +111,12 @@ public class fileController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    //查询文件审核状态
+    @PostMapping("/check")
+    public ResponseEntity<String> checkDocument(@RequestParam("fileName") String fileName) {
+        // 调用 SysFileService 的方法查询文件审核状态
+        String checkStatus = sysFileService.findCheckByFileName(fileName).orElse("未审核");
+        return ResponseEntity.ok(checkStatus);
     }
 }
