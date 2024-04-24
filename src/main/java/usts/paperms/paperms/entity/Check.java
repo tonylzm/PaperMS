@@ -26,7 +26,7 @@ public class Check {
     @Column(name="college_check")
     private String collegeCheck;
 
-    @Column(name="opinion")
+    @Column(name="opinion",columnDefinition = "TEXT")
     private String opinion;
 
     @Column(name="check_status")

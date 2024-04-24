@@ -109,6 +109,7 @@ public class UserController {
         Users user = new Users();
         user.setRealName(request.getRealName());
         user.setUsername(request.getUsername());
+        user.setCollege(request.getCollege());
         user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息

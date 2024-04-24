@@ -100,7 +100,7 @@ public class SysFileService {
         // 构建分页请求对象
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         // 调用 Spring Data JPA 的方法执行分页查询
-        return sysFileRepository.findByProducedContainingAndNameContaining(produced,name, pageable);
+        return sysFileRepository.findByProducedAndNameContaining(produced,name, pageable);
     }
 
     //通过文件名称查找文件审核状态
@@ -158,6 +158,7 @@ public class SysFileService {
             BeanUtils.copyProperties(sysFile, newHistoryChecked);
             newHistoryChecked.setStatus(status);
             newHistoryChecked.setDate(getNowTime());
+            newHistoryChecked.setOpinion(opinion);
             historyChecked.save(newHistoryChecked);
             //更新审核状态
             Check check = checkOptional.get();
@@ -188,6 +189,7 @@ public class SysFileService {
                 BeanUtils.copyProperties(sysFile, newHistoryChecked);
                 newHistoryChecked.setStatus(status);
                 newHistoryChecked.setDate(getNowTime());
+                newHistoryChecked.setOpinion(opinion);
                 historyChecked.save(newHistoryChecked);
             } catch (IOException e) {
                 e.printStackTrace();

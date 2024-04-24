@@ -52,6 +52,9 @@ public class historychecked {
     @Column(name ="status")
     private String status;
 
+    @Column(name = "opinion",columnDefinition = "TEXT")
+    private String opinion;
+
     @Column(name ="Date" , columnDefinition = "TIMESTAMP")
     private String Date;
 

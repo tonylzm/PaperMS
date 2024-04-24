@@ -20,7 +20,7 @@ public interface SysFileRepository extends JpaRepository<SysFile, Long> {
 
     Page<SysFile> findByCollegeContaining(String classes, Pageable pageable);
 
-    Page<SysFile> findByProducedContainingAndNameContaining(String produced, String name, Pageable pageable);
+    Page<SysFile> findByProducedAndNameContaining(String produced, String name, Pageable pageable);
 
     @Query(value ="SELECT f.* FROM `sys_file` f JOIN `sys_check` c ON f.`id` = c.`check_id` WHERE c.`check_status` = :checkStatus AND f.`college` = :college AND (:name IS NULL OR f.`name` LIKE %:name%)", nativeQuery = true)
     Page<SysFile> findFilesByClassCheck(@Param("checkStatus") String checkStatus, @Param("college") String college, @Param("name") String name, Pageable pageable);
