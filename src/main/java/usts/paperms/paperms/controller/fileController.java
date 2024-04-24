@@ -112,6 +112,7 @@ public class fileController {
             throw new RuntimeException(e);
         }
     }
+
     //查询文件审核状态
     @PostMapping("/check")
     public ResponseEntity<String> checkDocument(@RequestParam("fileName") String fileName) {
@@ -119,4 +120,5 @@ public class fileController {
         String checkStatus = sysFileService.findCheckByFileName(fileName).orElse("未审核");
         return ResponseEntity.ok(checkStatus);
     }
+
 }

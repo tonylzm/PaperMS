@@ -61,7 +61,8 @@ public class uploadController {
             return new ResponseEntity<>("没有接收到文件资料", HttpStatus.BAD_REQUEST);
         }
         String checkStatus = sysFileService.findCheckByFileName(filename).orElse("未审核");
-        if(!checkStatus.equals("未审核")){
+
+        if(!checkStatus.equals("未审核")&& !checkStatus.contains("不通过")){
             return new ResponseEntity<>("文件正在审核，请不要重复提交！", HttpStatus.BAD_REQUEST);
         }
         try {

@@ -44,8 +44,19 @@ public class CheckedController {
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
                                   @RequestParam("college")String college,
-                                  @RequestParam("status") String status) {
-        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,status,college);
+                                  @RequestParam("status") String status,
+                                  @RequestParam(defaultValue = "") String name) {
+        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,status,college,name);
+        return Result.success(page);
+    }
+
+    //返回文件
+    @PostMapping("/findFile")
+    public Result findFile(@RequestParam Integer pageNum,
+                           @RequestParam Integer pageSize,
+                           @RequestParam("produced")String produced,
+                           @RequestParam(defaultValue = "") String name) {
+        Page<SysFile> page = sysFileService.findAllFilesWithCheckStatus( pageNum, pageSize,produced, name);
         return Result.success(page);
     }
 

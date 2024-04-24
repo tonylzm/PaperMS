@@ -8,8 +8,8 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "sys_file")
-public class SysFile {
+@Table(name = "sys_historychecked")
+public class historychecked {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,30 +49,10 @@ public class SysFile {
     @Column(name ="college")
     private String college;
 
-    @OneToOne(mappedBy = "sysFile",cascade = CascadeType.ALL)
+    @Column(name ="status")
+    private String status;
 
-    private Check check;
-
-    // Constructors, getters and setters
-    public SysFile() {
-    }
-
-    public SysFile(String name, String type, Long size, String url, String md5,
-                   String produced,String fromon,boolean decrypt, boolean enable,
-                   String classes,String college) {
-        this.name = name;
-        this.type = type;
-        this.size = size;
-        this.url = url;
-        this.md5 = md5;
-        this.produced= produced;
-        this.fromon=fromon;
-        this.decrypt = decrypt;
-        this.enable = enable;
-        this.classes=classes;
-        this.college=college;
-    }
-
+    @Column(name ="Date" , columnDefinition = "TIMESTAMP")
+    private String Date;
 
 }
-
