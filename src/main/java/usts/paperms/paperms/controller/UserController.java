@@ -226,6 +226,16 @@ public class UserController {
         return ResponseEntity.ok(userService.findPrivateKeyByUsername(request.getUsername()));
     }
 
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteUser(@RequestBody Users request) {
+        Users user = userService.findUserByUsername(request.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+        userService.deleteUser(user);
+        return ResponseEntity.ok("User deleted successfully");
+    }
+
 
 
     //登录方法实现

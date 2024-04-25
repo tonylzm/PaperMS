@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import usts.paperms.paperms.Repository.KeyRepository;
 import usts.paperms.paperms.Repository.RoleRepository;
 import usts.paperms.paperms.Repository.SaltRepository;
@@ -18,10 +19,8 @@ import java.util.Optional;
 public class UserService {
     @Autowired
     private testUserRepository userRepository;
-
     @Autowired
     private RoleRepository roleRepository;
-
     @Autowired
     private SaltRepository saltRepository;
     @Autowired
@@ -81,8 +80,24 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    @Transactional
     public void deleteUser(Users users) {
+        //首先删除关联表
+        Optional<UserRole> userRoleOptional = roleRepository.findByUsers(users);
+        if (userRoleOptional.isPresent()) {
+            roleRepository.delete(userRoleOptional.get());
+        }
+        Optional<Salt> saltOptional = saltRepository.findByUsers(users);
+        if (saltOptional.isPresent()) {
+            saltRepository.delete(saltOptional.get());
+        }
+        Optional<Key> keyOptional = keyRepository.findByUsers(users);
+        if (keyOptional.isPresent()) {
+            keyRepository.delete(keyOptional.get());
+        }
+        //再删除用户表
         userRepository.delete(users);
+        
     }
 
     public Optional<String> findRoleByUsername(String username) {

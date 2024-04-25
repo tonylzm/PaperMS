@@ -16,7 +16,7 @@ public class Salt {
 
     @JsonBackReference
     @OneToOne
-    @JoinColumn(name = "salt_id", referencedColumnName = "id")
+    @JoinColumn(name = "salt_id", referencedColumnName = "id",unique = true)
     private Users users;
 
     private String value;

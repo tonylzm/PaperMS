@@ -16,7 +16,7 @@ public class Key {
 
     @JsonBackReference
     @OneToOne
-    @JoinColumn(name = "key_id", referencedColumnName = "id")
+    @JoinColumn(name = "key_id", referencedColumnName = "id",unique = true)
     private Users users;
 
     @Column(name = "key_name")
