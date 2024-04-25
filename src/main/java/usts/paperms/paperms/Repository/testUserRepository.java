@@ -15,7 +15,11 @@ public interface testUserRepository extends JpaRepository<Users, Long> {
 
     Page<Users> findByUsernameContaining(String username, Pageable pageable);
 
-    @Query(value ="SELECT f.*  FROM `test_user` f  JOIN `user_role` c ON f.`id` = c.`user_id` WHERE c.`role` = :role and f.`college`=:college", nativeQuery = true)
-    Page<Users> findUsersByUserRole(@Param("role") String role, @Param("college") String college, Pageable pageable);
+    @Query(value ="SELECT f.*  FROM `test_user` f  JOIN `user_role` c ON f.`id` = c.`user_id` WHERE c.`role` = :role and f.`college`=:college AND (:name IS NULL OR f.`username` LIKE %:name%)", nativeQuery = true)
+    Page<Users> findUsersByUserRole(@Param("role") String role, @Param("college") String college, @Param("name") String name, Pageable pageable);
+
+    //通过用户名修改密码
+    @Query(value = "update test_user set password = :password where username = :username", nativeQuery = true)
+    void updatePasswordByUsername(@Param("username") String username, @Param("password") String password);
 
 }

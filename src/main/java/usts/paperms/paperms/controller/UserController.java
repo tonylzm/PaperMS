@@ -84,6 +84,8 @@ public class UserController {
         user.setRealName(request.getRealName());
         user.setUsername(request.getUsername());
         user.setCollege(request.getCollege());
+        user.setTel(request.getTel());
+        user.setEmail(request.getEmail());
         user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息
@@ -110,6 +112,8 @@ public class UserController {
         user.setRealName(request.getRealName());
         user.setUsername(request.getUsername());
         user.setCollege(request.getCollege());
+        user.setTel(request.getTel());
+        user.setEmail(request.getEmail());
         user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
         // 其他用户信息...
         // 创建用户角色并保存用户信息和角色信息
@@ -121,8 +125,9 @@ public class UserController {
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
                                   @RequestParam("college")String college,
-                                  @RequestParam("role")String role) {
-        Page<Users> page=userService.findPageByClassCheck(pageNum,pageSize,role,college);
+                                  @RequestParam("role")String role,
+                                  @RequestParam(defaultValue = "") String name) {
+        Page<Users> page=userService.findPageByClassCheck(pageNum,pageSize,role,college,name);
         return Result.success(page);
     }
     //解析IP地址，并且判断用户是否存在异常访问
@@ -277,6 +282,21 @@ public class UserController {
             e.printStackTrace();
             return "Failed to generate RSA keys.";
         }
+    }
+    //修改密码
+    @PostMapping("/updatePassword")
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, Object> data) {
+        String username = (String) data.get("username");
+        String oldPassword = (String) data.get("oldPassword");
+        String newPassword = (String) data.get("newPassword");
+        return ResponseEntity.ok(userService.updatePasswordByUsername(username, oldPassword, newPassword));
+    }
+    //修改密码2
+    @PostMapping("/updatePassword2")
+    public ResponseEntity<?> updatePassword2(@RequestBody Map<String, Object> data) {
+        String username = (String) data.get("username");
+        String newPassword = (String) data.get("newPassword");
+        return ResponseEntity.ok(userService.updatePassword(username, newPassword));
     }
 
 }

@@ -11,6 +11,7 @@ import usts.paperms.paperms.Repository.RoleRepository;
 import usts.paperms.paperms.Repository.SaltRepository;
 import usts.paperms.paperms.Repository.testUserRepository;
 import usts.paperms.paperms.entity.*;
+import usts.paperms.paperms.security.PasswordEncryptionService;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,8 @@ public class UserService {
     private SaltRepository saltRepository;
     @Autowired
     private KeyRepository keyRepository;
+    @Autowired
+    private PasswordEncryptionService passwordEncryption;
 
     public Users createUserWithRoleAndSalt(Users users, String role, String saltValue,String publicKey,String privateKey) {
         // 创建用户对象
@@ -72,6 +75,55 @@ public class UserService {
         }
         return Optional.empty();
     }
+    //用户修改密码
+    public String updatePasswordByUsername(String username,String old,String password) {
+        Users user = userRepository.findByUsername(username);
+        //查找用户的盐
+        Optional<Salt> saltOptional = saltRepository.findByUsers(user);
+        //输出盐
+        if(saltOptional.isEmpty()){
+            return "用户不存在";
+        }
+        Salt salt = saltOptional.get();
+        System.out.println(salt.getValue());
+        //将旧密码加盐
+        old=passwordEncryption.encryptPassword(old,salt.getValue());
+        //检测旧密码是否正确
+        if (!user.getPassword().equals(old)) {
+            return "旧密码错误";
+        }
+        // 生成随机盐
+        String salt1 = passwordEncryption.generateSalt();
+        // 生成加密后的密码
+        password = passwordEncryption.encryptPassword(password, salt1);
+        //更新盐
+        saltOptional.get().setValue(salt1);
+        saltRepository.save(saltOptional.get());
+        user.setPassword(password);
+        userRepository.save(user);
+        return "修改成功";
+    }
+
+    //用户修改密码2
+    public String updatePassword(String username,String password) {
+        Users user = userRepository.findByUsername(username);
+        Optional<Salt> saltOptional = saltRepository.findByUsers(user);
+        //输出盐
+        if(saltOptional.isEmpty()){
+            return "用户不存在";
+        }
+        // 生成随机盐
+        String salt1 = passwordEncryption.generateSalt();
+        // 生成加密后的密码
+        password = passwordEncryption.encryptPassword(password, salt1);
+        //更新盐
+        saltOptional.get().setValue(salt1);
+        saltRepository.save(saltOptional.get());
+        user.setPassword(password);
+        userRepository.save(user);
+        return "修改成功";
+    }
+
     public Users createUser(Users users) {
         return userRepository.save(users);
     }
@@ -97,7 +149,7 @@ public class UserService {
         }
         //再删除用户表
         userRepository.delete(users);
-        
+
     }
 
     public Optional<String> findRoleByUsername(String username) {
@@ -150,12 +202,13 @@ public class UserService {
     }
 
     //分页查找classCheck通过的文件，两个表关联查询
-    public Page<Users> findPageByClassCheck(Integer pageNum, Integer pageSize, String role, String college) {
+    public Page<Users> findPageByClassCheck(Integer pageNum, Integer pageSize, String role, String college, String name) {
         // 构建分页请求对象
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         // 调用 Spring Data JPA 的方法执行分页查询
-        return userRepository.findUsersByUserRole(role, college,pageable);
+        return userRepository.findUsersByUserRole(role, college,name,pageable);
     }
+
 
     // 其他操作方法
 }

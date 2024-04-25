@@ -26,6 +26,10 @@ public class Users {
     private String realName;
     @Column(name = "college")
     private String college;
+    @Column(name = "tel")
+    private String tel;
+    @Column(name = "email")
+    private String email;
 
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
