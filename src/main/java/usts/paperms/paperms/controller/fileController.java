@@ -102,7 +102,7 @@ public class fileController {
             //将相应文件在数据库中isDecrypted字段设置为false
             SysFile sysFile = sysFileService.findByName(fileName);
             sysFile.setDecrypt(true);
-            sysFileService.save(sysFile);
+            sysFileService.saveDecrypt(sysFile);
 
             return ResponseEntity.ok("File decrypted successfully");
         } catch (IOException e) {

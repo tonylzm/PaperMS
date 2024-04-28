@@ -35,6 +35,8 @@ public class SysFileService {
     private RSAFileEncryptionService rsaFileEncryptionService;
     @Autowired
     private HistoryChecked historyChecked;
+    @Autowired
+    private UserService userService;
 
     public SysFile save(SysFile sysFile) {
 
@@ -46,10 +48,11 @@ public class SysFileService {
             existingFile.setUrl(sysFile.getUrl());
             existingFile.setMd5(sysFile.getMd5());
             existingFile.setProduced(sysFile.getProduced());
-            existingFile.setFromon(sysFile.getFromon());
             existingFile.setDecrypt(sysFile.isDecrypt());
-            existingFile.setEnable(sysFile.isEnable());
             existingFile.setClasses(sysFile.getClasses());
+            existingFile.setTestname(sysFile.getTestname());
+            existingFile.setTesttype(sysFile.getTesttype());
+            existingFile.setTesttime(sysFile.getTesttime());
             existingFile.setCollege(sysFile.getCollege());
             sysFileRepository.save(existingFile);
 
@@ -75,6 +78,22 @@ public class SysFileService {
             return savedfile;
         }
     }
+
+    public SysFile saveDecrypt(SysFile sysFile){
+        SysFile existingFile = sysFileRepository.findByName(sysFile.getName());
+        if (existingFile != null) {
+            // 更新已存在的文件信息
+            existingFile.setDecrypt(sysFile.isDecrypt());
+            sysFileRepository.save(existingFile);
+
+            return existingFile;
+        } else {
+            return null;
+        }
+
+    }
+
+
 
 
     public String findMD5ByFileName(String fileName) {
@@ -211,11 +230,15 @@ public class SysFileService {
     }
 
     //分页查找classCheck通过的文件，两个表关联查询
-    public Page<SysFile> findPageByClassCheck(Integer pageNum, Integer pageSize, String status,String college,String name) {
-        // 构建分页请求对象
+    public Page<SysFile> findPageByClassCheck(Integer pageNum, Integer pageSize, String status,String college,String name,String produced) {
+        //检测produced权限是否为user
+        Optional<String> role = userService.findRoleByUsername(produced);
+        if(role.isPresent() && role.get().equals("user")) {
+            return null;
+        }
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         // 调用 Spring Data JPA 的方法执行分页查询
-        return sysFileRepository.findFilesByClassCheck(status, college,name,pageable);
+        return sysFileRepository.findFilesByClassCheck(status, college,name,produced,pageable);
     }
 
     public SysFile findByName(String fileName) {

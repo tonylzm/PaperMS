@@ -39,14 +39,15 @@ public class CheckedController {
         return ResponseEntity.ok("College check successful");
     }
 
-    //返回系主任审核通过的文件
+    //返回需要审核的文件
     @PostMapping("/findCheckedfile")
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
                                   @RequestParam("college")String college,
                                   @RequestParam("status") String status,
+                                  @RequestParam("produced")String produced,
                                   @RequestParam(defaultValue = "") String name) {
-        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,status,college,name);
+        Page<SysFile> page=sysFileService.findPageByClassCheck(pageNum,pageSize,status,college,name,produced);
         return Result.success(page);
     }
 

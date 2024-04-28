@@ -22,8 +22,8 @@ public interface SysFileRepository extends JpaRepository<SysFile, Long> {
 
     Page<SysFile> findByProducedAndNameContaining(String produced, String name, Pageable pageable);
 
-    @Query(value ="SELECT f.* FROM `sys_file` f JOIN `sys_check` c ON f.`id` = c.`check_id` WHERE c.`check_status` = :checkStatus AND f.`college` = :college AND (:name IS NULL OR f.`name` LIKE %:name%)", nativeQuery = true)
-    Page<SysFile> findFilesByClassCheck(@Param("checkStatus") String checkStatus, @Param("college") String college, @Param("name") String name, Pageable pageable);
+    @Query(value ="SELECT f.* FROM `sys_file` f JOIN `sys_check` c ON f.`id` = c.`check_id` WHERE c.`check_status` = :checkStatus AND f.`college` = :college AND f.`produced` != :produced  AND (:name IS NULL OR f.`name` LIKE %:name%)", nativeQuery = true)
+    Page<SysFile> findFilesByClassCheck(@Param("checkStatus") String checkStatus, @Param("college") String college, @Param("name") String name,@Param("produced") String produced, Pageable pageable);
 
     //输出所有文件，并且加上文件审核状态
     @Query(value="SELECT f.*, c.`check_status` FROM `sys_file` f LEFT JOIN `sys_check` c ON f.`id` = c.`check_id` WHERE f.`produced` =:produced AND (:name IS NULL OR f.`name`LIKE %:name%) ", nativeQuery = true)

@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Date;
+
 @Entity
 @Getter
 @Setter
@@ -34,20 +36,24 @@ public class SysFile {
     @Column(name="produced")
     private String produced;
 
-    @Column(name="fromon")
-    private String fromon;
+    @Column(name="testtime")
+    private String testtime;
 
     @Column(name = "is_decrypt")
     private boolean decrypt;
 
-    @Column(name = "enable")
-    private boolean enable;
+    @Column(name = "testtype")
+    private String testtype;
+
+    @Column(name = "testname")
+    private String testname;
 
     @Column(name ="classes")
     private String classes;
 
     @Column(name ="college")
     private String college;
+
 
     @OneToOne(mappedBy = "sysFile",cascade = CascadeType.ALL)
 
@@ -58,19 +64,20 @@ public class SysFile {
     }
 
     public SysFile(String name, String type, Long size, String url, String md5,
-                   String produced,String fromon,boolean decrypt, boolean enable,
-                   String classes,String college) {
+                   String produced,String testtype,String testtime, boolean decrypt,
+                   String classes,String college,String testname) {
         this.name = name;
         this.type = type;
         this.size = size;
         this.url = url;
         this.md5 = md5;
         this.produced= produced;
-        this.fromon=fromon;
+        this.testtime=testtime;
         this.decrypt = decrypt;
-        this.enable = enable;
+        this.testtype=testtype;
         this.classes=classes;
         this.college=college;
+        this.testname=testname;
     }
 
 

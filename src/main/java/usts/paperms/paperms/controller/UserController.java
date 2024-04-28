@@ -291,6 +291,7 @@ public class UserController {
         String newPassword = (String) data.get("newPassword");
         return ResponseEntity.ok(userService.updatePasswordByUsername(username, oldPassword, newPassword));
     }
+
     //修改密码2
     @PostMapping("/updatePassword2")
     public ResponseEntity<?> updatePassword2(@RequestBody Map<String, Object> data) {

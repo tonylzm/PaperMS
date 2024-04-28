@@ -14,6 +14,7 @@ import usts.paperms.paperms.security.PasswordEncryptionService;
 import usts.paperms.paperms.service.SecurityService.DecryptFileService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
+import usts.paperms.paperms.service.TimeService;
 
 
 import java.io.*;
@@ -22,7 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Base64;
-
+import java.util.Date;
 
 
 @RestController
@@ -47,6 +48,8 @@ public class uploadController {
     private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private PasswordEncryptionService passwordEncryption;
+    @Autowired
+    private TimeService timeService;
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("username") String username,
                                                    @RequestParam("from") String from,
@@ -60,6 +63,8 @@ public class uploadController {
         if (encryptedFile.isEmpty()) {
             return new ResponseEntity<>("没有接收到文件资料", HttpStatus.BAD_REQUEST);
         }
+        //将信息中的时间组合
+       
         String checkStatus = sysFileService.findCheckByFileName(filename).orElse("未审核");
 
         if(!checkStatus.equals("未审核")&& !checkStatus.contains("不通过")){
@@ -74,6 +79,8 @@ public class uploadController {
                 return new ResponseEntity<>("只接收PDF格式文件，请检查", HttpStatus.BAD_REQUEST);
             }
             JSONObject data = new JSONObject(info);
+            //格式化时间,改成yyyy-MM-dd HH:mm:ss
+            String time=timeService.time(data.getString("startTime"),data.getString("endTime"));
             // 计算文件的 MD5 校验和
             String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
             String hashedPassword= redisTemplate.opsForValue().get("hashedPassword:" + username);
@@ -99,9 +106,11 @@ public class uploadController {
             sysFile.setUrl(targetLocation.toString());
             sysFile.setMd5(md5Checksum);
             sysFile.setProduced(username);
-            sysFile.setFromon(from);
             sysFile.setDecrypt(false);
-            sysFile.setEnable(true);
+
+            sysFile.setTestname(data.getString("name"));
+            sysFile.setTesttime(time);
+            sysFile.setTesttype(data.getString("region"));
             sysFile.setClasses(data.getString("class"));
             sysFile.setCollege(data.getString("college"));
             sysFileService.save(sysFile);
