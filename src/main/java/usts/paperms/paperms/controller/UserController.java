@@ -120,6 +120,39 @@ public class UserController {
         userService.createUserWithRoleAndSalt(user, "check", salt,publicKey,privateKey);
         return ResponseEntity.ok("Registration successful");
     }
+    //院长注册方法
+    @PostMapping("/college_register")
+    public ResponseEntity<?> college_register(@RequestBody Users request) throws Exception {
+        // 检查用户名是否已经存在
+        if (userService.findUserByUsername(request.getUsername()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+        }
+        String keys=rsaKeyGenerationService.custom_generateKeys();
+        //按换行符分别获取公钥和私钥
+        String[] key=keys.split("\n");
+        String publicKey = key[0];
+        String privateKey = key[1];
+        // 生成随机盐
+        String salt = passwordEncryption.generateSalt();
+        // 创建用户对象
+        Users user = new Users();
+        user.setRealName(request.getRealName());
+        user.setUsername(request.getUsername());
+        user.setCollege(request.getCollege());
+        user.setTel(request.getTel());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
+        // 其他用户信息...
+        // 创建用户角色并保存用户信息和角色信息
+        userService.createUserWithRoleAndSalt(user, "college", salt,publicKey,privateKey);
+        return ResponseEntity.ok("Registration successful");
+    }
+    //角色权限变化方法
+    @PostMapping("/role")
+    public ResponseEntity<?> changeRole(@RequestParam("username") String username,
+                                        @RequestParam("role") String role) {
+        return ResponseEntity.ok(userService.updateRoleByUsername(username, role));
+    }
     //查找相应权限的用户
     @PostMapping("/userrole")
     public Result findCheckedfile(@RequestParam Integer pageNum,
@@ -256,6 +289,8 @@ public class UserController {
         data.put("username", loginRequest.getUsername());
         data.put("realName", user.getRealName());
         data.put("college", user.getCollege());
+        data.put("tel", user.getTel());
+        data.put("email", user.getEmail());
         String json = JsonConverter.convertToJson(data);
         JSONObject jsonObject = new JSONObject(json);
         return Result.ok("Login successful").body(jsonObject);

@@ -208,6 +208,19 @@ public class UserService {
         // 调用 Spring Data JPA 的方法执行分页查询
         return userRepository.findUsersByUserRole(role, college,name,pageable);
     }
+    //更新用户角色
+    public String updateRoleByUsername(String username, String role) {
+        Users user = userRepository.findByUsername(username);
+        Optional<UserRole> userRoleOptional = roleRepository.findByUsers(user);
+        if (userRoleOptional.isPresent()) {
+            UserRole userRole = userRoleOptional.get();
+            userRole.setRole(role);
+            roleRepository.save(userRole);
+            return "修改成功";
+        }else {
+            return "用户不存在";
+        }
+    }
 
 
     // 其他操作方法
