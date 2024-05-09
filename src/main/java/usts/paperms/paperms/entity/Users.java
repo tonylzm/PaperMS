@@ -2,6 +2,8 @@ package usts.paperms.paperms.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +23,7 @@ public class Users {
     @Column(name = "username")
     private String username;
     @Column(name = "password")
-    @JsonIgnore
+    @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
     @Column(name = "real_name")
     private String realName;

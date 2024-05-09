@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import usts.paperms.paperms.entity.Users;
 
+import java.util.List;
+
 @Repository
 public interface testUserRepository extends JpaRepository<Users, Long> {
     // 根据用户名查询用户信息
@@ -21,5 +23,9 @@ public interface testUserRepository extends JpaRepository<Users, Long> {
     //通过用户名修改密码
     @Query(value = "update test_user set password = :password where username = :username", nativeQuery = true)
     void updatePasswordByUsername(@Param("username") String username, @Param("password") String password);
+
+    @Query(value ="SELECT f.*  FROM `test_user` f  JOIN `user_role` c ON f.`id` = c.`user_id` WHERE c.`role` = :role AND f.`college`=:college ", nativeQuery = true)
+    List<Users> findUsersByUser(@Param("role") String role, @Param("college") String college);
+
 
 }

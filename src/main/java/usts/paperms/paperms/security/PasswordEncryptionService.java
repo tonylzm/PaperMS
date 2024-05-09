@@ -29,7 +29,6 @@ public class PasswordEncryptionService {
     // 加密密码
     public String encryptPassword(String password, String salt) {
         byte[] saltBytes = Base64.getDecoder().decode(salt);
-
         byte[] hashedPassword = hashPassword(password.toCharArray(), saltBytes);
         return Base64.getEncoder().encodeToString(hashedPassword);
     }

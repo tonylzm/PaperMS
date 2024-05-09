@@ -78,10 +78,8 @@ public class RSAFileEncryptionService {
     public File encryptFiles(byte[] inputFile,String filename) throws Exception {
         // 生成AES密钥
         SecretKey aesKey = generateAESKey();
-
         // 将AES密钥加密
         byte[] encryptedAESKey = encryptAESKey(aesKey);
-
         // 加密文件内容
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
@@ -92,7 +90,6 @@ public class RSAFileEncryptionService {
             byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
             fileOutputStream.write(encryptedBytes);
         }
-
         // 将加密后的AES密钥写入文件
         try (OutputStream fileOutputStream = new FileOutputStream(AES_KEY_FILE_PATH +  filename + ".key")) {
             fileOutputStream.write(encryptedAESKey);

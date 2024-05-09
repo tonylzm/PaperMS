@@ -61,4 +61,26 @@ public class CheckedController {
         return Result.success(page);
     }
 
+    //返回class_check对应需要审核的文件
+    @PostMapping("/findClassCheckFile")
+    public Result findClassCheckFile(@RequestParam Integer pageNum,
+                                     @RequestParam Integer pageSize,
+                                     @RequestParam("class_check")String class_check,
+                                     @RequestParam("status") String status,
+                                     @RequestParam("college")String college,
+                                     @RequestParam(defaultValue = "") String name) {
+        Page<SysFile> page = sysFileService.findALLFilesWithCheckClass( pageNum, pageSize, name, class_check,status,college);
+        return Result.success(page);
+    }
+    //返回college_check对应需要审核的文件
+    @PostMapping("/findCollegeCheckFile")
+    public Result findCollegeCheckFile(@RequestParam Integer pageNum,
+                                     @RequestParam Integer pageSize,
+                                     @RequestParam("college_check")String college_check,
+                                     @RequestParam("status") String status,
+                                     @RequestParam("college")String college,
+                                     @RequestParam(defaultValue = "") String name) {
+        Page<SysFile> page = sysFileService.findALLFilesWithCheckCollege( pageNum, pageSize, name, college_check,status,college);
+        return Result.success(page);
+    }
 }

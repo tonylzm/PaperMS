@@ -31,7 +31,10 @@ import usts.paperms.paperms.service.UserService;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -128,6 +131,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
         String keys=rsaKeyGenerationService.custom_generateKeys();
+        System.out.println(request.getPassword());
         //按换行符分别获取公钥和私钥
         String[] key=keys.split("\n");
         String publicKey = key[0];
@@ -333,6 +337,28 @@ public class UserController {
         String username = (String) data.get("username");
         String newPassword = (String) data.get("newPassword");
         return ResponseEntity.ok(userService.updatePassword(username, newPassword));
+    }
+
+    //查找角色为审批人的用户
+    @PostMapping("/findCheckUser")
+    public Result findCheckUser(@RequestParam("college")String college
+                               ) {
+        List<Users> users_class = userService.findUsersByUser("check", college);
+        List<Users> users_college = userService.findUsersByUser("college", college);
+
+        List<String> realNames = users_class.stream()
+                .map(Users::getRealName)
+                .toList();
+
+        List<String> realName = users_college.stream()
+                .map(Users::getRealName)
+                .toList();
+
+        Map<String, List<String>> result = new HashMap<>();
+        result.put("class_check", realNames);
+        result.put("college_check", realName);
+
+        return Result.success(result);
     }
 
 }

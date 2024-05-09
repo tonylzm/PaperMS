@@ -222,6 +222,11 @@ public class UserService {
         }
     }
 
+    //查找对应权限的用户real_name
+    public List<Users> findUsersByUser(String role, String college) {
+        return userRepository.findUsersByUser(role, college);
+    }
+
 
     // 其他操作方法
 }

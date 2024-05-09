@@ -79,6 +79,8 @@ public class uploadController {
                 return new ResponseEntity<>("只接收PDF格式文件，请检查", HttpStatus.BAD_REQUEST);
             }
             JSONObject data = new JSONObject(info);
+            String classCheck = data.getString("classCheck");
+            String collegeCheck = data.getString("collegeCheck");
             //格式化时间,改成yyyy-MM-dd HH:mm:ss
             String time=timeService.time(data.getString("startTime"),data.getString("endTime"));
             // 计算文件的 MD5 校验和
@@ -113,7 +115,7 @@ public class uploadController {
             sysFile.setTesttype(data.getString("region"));
             sysFile.setClasses(data.getString("class"));
             sysFile.setCollege(data.getString("college"));
-            sysFileService.save(sysFile);
+            sysFileService.save(sysFile,classCheck,collegeCheck);
             return new ResponseEntity<>("文件上传成功", HttpStatus.OK);
         } catch (IOException ex) {
             return new ResponseEntity<>("无法存储文件，请再试一次！", HttpStatus.INTERNAL_SERVER_ERROR);

@@ -38,7 +38,7 @@ public class SysFileService {
     @Autowired
     private UserService userService;
 
-    public SysFile save(SysFile sysFile) {
+    public SysFile save(SysFile sysFile,String classCheck,String collegeCheck) {
 
         SysFile existingFile = sysFileRepository.findByName(sysFile.getName());
         if (existingFile != null) {
@@ -61,8 +61,8 @@ public class SysFileService {
             if (checkOptional.isPresent()) {
                 Check check = checkOptional.get();
                 check.setCheckStatus("未审核");
-                check.setClassCheck("");
-                check.setCollegeCheck("");
+                check.setClassCheck(classCheck);
+                check.setCollegeCheck(collegeCheck);
                 check.setOpinion("");
                 checkRespository.save(check);
             }
@@ -74,6 +74,8 @@ public class SysFileService {
             Check check = new Check();
             check.setSysFile(sysFile);
             check.setCheckStatus("未审核");
+            check.setClassCheck(classCheck);
+            check.setCollegeCheck(collegeCheck);
             checkRespository.save(check);
             return savedfile;
         }
@@ -227,6 +229,20 @@ public class SysFileService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         // 调用 Spring Data JPA 的方法执行分页查询
         return sysFileRepository.findAllFilesWithCheckStatus(produced,name,pageable);
+    }
+    //分页查找classCheck相对应的文件
+    public Page<SysFile> findALLFilesWithCheckClass(Integer pageNum, Integer pageSize, String name,String class_check,String status,String college) {
+        // 构建分页请求对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        // 调用 Spring Data JPA 的方法执行分页查询
+        return sysFileRepository.findAllFilesWithCheckClass(status,college,name,class_check,pageable);
+    }
+    //分页查找collegeCheck相对应的文件
+    public Page<SysFile> findALLFilesWithCheckCollege(Integer pageNum, Integer pageSize, String name,String college_check,String status,String college) {
+        // 构建分页请求对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        // 调用 Spring Data JPA 的方法执行分页查询
+        return sysFileRepository.findAllFilesWithCheckCollege(status,college,name,college_check,pageable);
     }
 
     //分页查找classCheck通过的文件，两个表关联查询
