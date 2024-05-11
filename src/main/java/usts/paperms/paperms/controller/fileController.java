@@ -64,6 +64,16 @@ public class fileController {
         // 构造返回结果
         return Result.success(page);
     }
+    @GetMapping(value = "/opinion", produces = MediaType.APPLICATION_JSON_VALUE)
+    public  Result findopinion(@RequestParam Integer pageNum,
+                                      @RequestParam Integer pageSize,
+                                      @RequestParam("produced") String produced,
+                                      @RequestParam("name") String name) {
+        // 调用 SysFileService 的方法执行分页查询
+        Page<SysFile> page = sysFileService.findPageByProduced(pageNum, pageSize, produced, name);
+        // 构造返回结果
+        return Result.success(page);
+    }
     //文件预览方法
     @GetMapping("/preview")
     public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName) {
