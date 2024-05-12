@@ -27,21 +27,15 @@
             <artifactId>json</artifactId>
             <version>20210307</version>
         </dependency>
-
-
-
         <dependency>
             <groupId>com.maxmind.geoip2</groupId>
             <artifactId>geoip2</artifactId>
             <version>2.17.0</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -55,14 +49,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
-
         <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
             <version>1.1</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -73,8 +64,7 @@
             <version>3.1.3</version>
             <scope>compile</scope>
         </dependency>
-
-        <!-- Other Dependencies -->
+        <!--ther Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -146,6 +136,7 @@
             <artifactId>javax.persistence-api</artifactId>
             <version>2.2</version>
         </dependency>
+
 
     </dependencies>
 
