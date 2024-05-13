@@ -54,7 +54,7 @@ public class MessageController {
         Map<String, Object> logData = logService.getLogs();
         messagingTemplate.convertAndSend("/topic/messages", logData);
         // 设置标志，准备开始广播
-        shouldBroadcast = true;
+        //shouldBroadcast = true;
 
     }
     @MessageMapping("/byb") // 对应客户端发送的目的地 /app/hello

@@ -1,5 +1,6 @@
 package usts.paperms.paperms.Repository;
 
+import org.hibernate.sql.Update;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,9 @@ import java.util.List;
 public interface testUserRepository extends JpaRepository<Users, Long> {
     // 根据用户名查询用户信息
     Users findByUsername(String username);
+
+    Users findByEmail(String email);
+
 
     Page<Users> findByUsernameContaining(String username, Pageable pageable);
 

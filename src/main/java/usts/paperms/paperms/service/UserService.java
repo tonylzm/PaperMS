@@ -124,8 +124,23 @@ public class UserService {
         return "修改成功";
     }
 
+    //用户修改邮箱
+    public Boolean changeEmail(String username, String email) {
+        Users user = userRepository.findByUsername(username);
+        if(user == null){
+            return false;
+        }
+        user.setEmail(email);
+        userRepository.save(user);
+        return true;
+    }
+
     public Users createUser(Users users) {
         return userRepository.save(users);
+    }
+
+    public Boolean findEmail(String email) {
+        return userRepository.findByEmail(email) != null;
     }
 
     public Users findUserByUsername(String username) {
@@ -151,6 +166,7 @@ public class UserService {
         userRepository.delete(users);
 
     }
+
 
     public Optional<String> findRoleByUsername(String username) {
         Optional<Users> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
