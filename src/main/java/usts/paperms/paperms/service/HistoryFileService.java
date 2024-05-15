@@ -19,4 +19,8 @@ public class HistoryFileService {
         return historyChecked.findByProducedContainingAndNameContaining(produced, name, pageable);
     }
 
+    public void saveHistoryFile(historychecked historychecked) {
+        historyChecked.save(historychecked);
+    }
+
 }

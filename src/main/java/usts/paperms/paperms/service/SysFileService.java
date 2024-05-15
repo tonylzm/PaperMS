@@ -39,6 +39,8 @@ public class SysFileService {
     private UserService userService;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    private HistoryFileService historyFileService;
 
     public SysFile save(SysFile sysFile,String classCheck,String collegeCheck) {
 
@@ -182,7 +184,7 @@ public class SysFileService {
             newHistoryChecked.setStatus(status);
             newHistoryChecked.setDate(getNowTime());
             newHistoryChecked.setOpinion(opinion);
-            historyChecked.save(newHistoryChecked);
+            historyFileService.saveHistoryFile(newHistoryChecked);
             //更新审核状态
             Check check = checkOptional.get();
             check.setClassCheck(classCheck);
@@ -214,7 +216,7 @@ public class SysFileService {
                 newHistoryChecked.setStatus(status);
                 newHistoryChecked.setDate(getNowTime());
                 newHistoryChecked.setOpinion(opinion);
-                historyChecked.save(newHistoryChecked);
+                historyFileService.saveHistoryFile(newHistoryChecked);
             } catch (IOException e) {
                 e.printStackTrace();
             }
