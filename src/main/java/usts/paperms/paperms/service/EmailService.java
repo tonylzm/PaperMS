@@ -14,17 +14,15 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     private Integer code;
     @Value("${spring.mail.username}")
-    private String from="";
+    private String fromEmail="";
     @Autowired
     private JavaMailSender javaMailSender;
+
+
     public String email(String to) throws MessagingException {
+        String fromName = "USTS_苏州科技大学";
+        String from = fromName + "<" + fromEmail + ">";
         code = RandomUtil.randomInt(100000, 999999);
-//        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-//        simpleMailMessage.setFrom(from);
-//        simpleMailMessage.setTo(to);
-//        simpleMailMessage.setSubject("test");
-//        simpleMailMessage.setText("Code:" + code.toString());
-//        javaMailSender.send(simpleMailMessage);
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8"); // 第二个参数为true表示发送HTML邮件
         String htmlContent = "<!DOCTYPE html>\n" +
@@ -172,6 +170,7 @@ public class EmailService {
                 "    </tbody>\n" +
                 "</table>\n" +
                 "</body>"; // 这里是你的HTML内容
+
         helper.setFrom(from);
         helper.setTo(to);
         helper.setSubject("验证码邮件");

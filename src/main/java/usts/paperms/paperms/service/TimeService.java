@@ -27,4 +27,10 @@ public class TimeService {
         }
         return null;
     }
+
+    //得到当前时间
+    public String getCurrentTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(new Date());
+    }
 }

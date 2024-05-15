@@ -32,7 +32,7 @@ public class RSAKeyGenerationService {
         // Generate key pair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         SecureRandom secureRandom = new SecureRandom();
-        keyPairGenerator.initialize(4096, secureRandom);
+        keyPairGenerator.initialize(1024, secureRandom);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
         // 得到公钥和私钥

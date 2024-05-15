@@ -143,6 +143,11 @@ public class UserService {
         return userRepository.findByEmail(email) != null;
     }
 
+    //通过邮箱查找用户
+    public Users findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
     public Users findUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }

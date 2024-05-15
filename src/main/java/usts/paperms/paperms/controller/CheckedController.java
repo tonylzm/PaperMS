@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SysFileService;
 
 @RestController
@@ -18,6 +19,8 @@ import usts.paperms.paperms.service.SysFileService;
 public class CheckedController {
     @Autowired
     private SysFileService sysFileService;
+    @Autowired
+    private LogSaveService logSaveService;
 
     @PostMapping("/classChecked")
     public ResponseEntity<String> classChecked(@RequestParam("fileName") String filename,
@@ -26,6 +29,7 @@ public class CheckedController {
                                                @RequestParam("status") String status) throws Exception {
 
         sysFileService.updateClassCheckByFileName(filename, classCheck, opinion,status);
+        logSaveService.saveLog("系主任进行了对"+filename+"的审批",classCheck);
         return ResponseEntity.ok("Class check successful");
     }
 
@@ -36,6 +40,7 @@ public class CheckedController {
                                                  @RequestParam("status") String status) {
 
         sysFileService.updateCollegeCheckByFileName(filename, collegeCheck, opinion,status);
+        logSaveService.saveLog("院长进行了对"+filename+"的审批",collegeCheck);
         return ResponseEntity.ok("College check successful");
     }
 

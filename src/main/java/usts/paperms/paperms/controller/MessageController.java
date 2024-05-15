@@ -71,12 +71,12 @@ public class MessageController {
         messagingTemplate.convertAndSend("/topic/messages", "消息已成功订阅");;
     }
 
-    @Scheduled(fixedRate = 5000) // 每5秒执行一次
-    public void sendPeriodicMessage() {
-        // 向客户端发送周期性消息
-        if (shouldBroadcast) {
-            Map<String, Object> logData = logService.getLogs();
-            messagingTemplate.convertAndSend("/topic/messages", logData);
-        }
-    }
+//    @Scheduled(fixedRate = 5000) // 每5秒执行一次
+//    public void sendPeriodicMessage() {
+//        // 向客户端发送周期性消息
+//        if (shouldBroadcast) {
+//            Map<String, Object> logData = logService.getLogs();
+//            messagingTemplate.convertAndSend("/topic/messages", logData);
+//        }
+//    }
 }

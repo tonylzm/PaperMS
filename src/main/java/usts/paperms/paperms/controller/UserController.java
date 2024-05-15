@@ -24,6 +24,7 @@ import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.AESKeyGenerationService;
 import usts.paperms.paperms.service.SecurityService.JsonConverter;
 import usts.paperms.paperms.service.SecurityService.RSAKeyGenerationService;
@@ -49,6 +50,8 @@ public class UserController {
     private AESKeyGenerationService aesKeyGenerationService;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+    @Autowired
+    private LogSaveService logSaveService;
 
     private final String BAIDU_MAP_API_KEY = "RY1MJlgS9FiUEQFzZPdtCRpe538IduzF";
     @PostMapping("/create")
@@ -288,6 +291,7 @@ public class UserController {
             return Result.fail("Invalid username or password");
         }
         // 登录成功，返回角色权限信息和登录成功信息
+        logSaveService.saveLog("用户登录系统",loginRequest.getUsername());
         Map<String, Object> data = JsonConverter.createMap();
         data.put("role", userService.findRoleByUsername(loginRequest.getUsername()).get());
         data.put("username", loginRequest.getUsername());

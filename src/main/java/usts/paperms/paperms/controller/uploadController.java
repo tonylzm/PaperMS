@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.DecryptFileService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
@@ -50,6 +51,9 @@ public class uploadController {
     private PasswordEncryptionService passwordEncryption;
     @Autowired
     private TimeService timeService;
+    @Autowired
+    private LogSaveService logSaveService;
+
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("username") String username,
                                                    @RequestParam("from") String from,
@@ -116,6 +120,7 @@ public class uploadController {
             sysFile.setClasses(data.getString("class"));
             sysFile.setCollege(data.getString("college"));
             sysFileService.save(sysFile,classCheck,collegeCheck);
+            logSaveService.saveLog("用户上传了"+filename+"文件",username);
             return new ResponseEntity<>("文件上传成功", HttpStatus.OK);
         } catch (IOException ex) {
             return new ResponseEntity<>("无法存储文件，请再试一次！", HttpStatus.INTERNAL_SERVER_ERROR);
