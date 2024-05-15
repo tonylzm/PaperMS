@@ -181,6 +181,7 @@ public class SysFileService {
             //加入历史记录
             historychecked newHistoryChecked = new historychecked();
             BeanUtils.copyProperties(sysFile, newHistoryChecked);
+            newHistoryChecked.setId(null);
             newHistoryChecked.setStatus(status);
             newHistoryChecked.setDate(getNowTime());
             newHistoryChecked.setOpinion(opinion);
@@ -213,6 +214,7 @@ public class SysFileService {
                 //将sys_file表中所有信息删除，转存到history_checked表中
                 historychecked newHistoryChecked = new historychecked();
                 BeanUtils.copyProperties(sysFile, newHistoryChecked);
+                newHistoryChecked.setId(null);
                 newHistoryChecked.setStatus(status);
                 newHistoryChecked.setDate(getNowTime());
                 newHistoryChecked.setOpinion(opinion);
