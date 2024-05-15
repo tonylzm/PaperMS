@@ -37,6 +37,8 @@ public class SysFileService {
     private HistoryChecked historyChecked;
     @Autowired
     private UserService userService;
+    @Autowired
+    private LogSaveService logSaveService;
 
     public SysFile save(SysFile sysFile,String classCheck,String collegeCheck) {
 
@@ -187,6 +189,7 @@ public class SysFileService {
             check.setOpinion(opinion);
             check.setCheckStatus(status);
             checkRespository.save(check);
+            logSaveService.saveLog("系统对文件"+fileName+"进行了加密且对文件信息进行了更新","System");
         }
     }
 
@@ -221,6 +224,7 @@ public class SysFileService {
             check.setOpinion(opinion);
             check.setCheckStatus(status);
             checkRespository.save(check);
+            logSaveService.saveLog("系统删除了"+fileName+"文件","System");
         }
     }
     //分页查找通过produced的文件

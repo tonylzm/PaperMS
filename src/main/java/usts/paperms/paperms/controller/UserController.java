@@ -291,7 +291,6 @@ public class UserController {
             return Result.fail("Invalid username or password");
         }
         // 登录成功，返回角色权限信息和登录成功信息
-        logSaveService.saveLog("用户登录系统",loginRequest.getUsername());
         Map<String, Object> data = JsonConverter.createMap();
         data.put("role", userService.findRoleByUsername(loginRequest.getUsername()).get());
         data.put("username", loginRequest.getUsername());
@@ -301,6 +300,7 @@ public class UserController {
         data.put("email", user.getEmail());
         String json = JsonConverter.convertToJson(data);
         JSONObject jsonObject = new JSONObject(json);
+        logSaveService.saveLog("用户进行登录",user.getRealName());
         return Result.ok("Login successful").body(jsonObject);
     }
 

@@ -22,17 +22,18 @@ public class CheckedController {
     @Autowired
     private LogSaveService logSaveService;
 
+    //系主任审核
     @PostMapping("/classChecked")
     public ResponseEntity<String> classChecked(@RequestParam("fileName") String filename,
                                                @RequestParam("classCheck") String classCheck,
                                                @RequestParam("opinion") String opinion,
                                                @RequestParam("status") String status) throws Exception {
 
-        sysFileService.updateClassCheckByFileName(filename, classCheck, opinion,status);
+        sysFileService.updateClassCheckByFileName(filename, classCheck,opinion,status);
         logSaveService.saveLog("系主任进行了对"+filename+"的审批",classCheck);
         return ResponseEntity.ok("Class check successful");
     }
-
+    //院长审核
     @PostMapping("/collegeChecked")
     public ResponseEntity<String> collegeChecked(@RequestParam("fileName") String filename,
                                                  @RequestParam("collegeCheck") String collegeCheck,
@@ -44,7 +45,7 @@ public class CheckedController {
         return ResponseEntity.ok("College check successful");
     }
 
-    //返回需要审核的文件
+    //返回需要审核的文件(已经弃用）
     @PostMapping("/findCheckedfile")
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
@@ -56,7 +57,7 @@ public class CheckedController {
         return Result.success(page);
     }
 
-    //返回文件
+    //返回文件(已经弃用）
     @PostMapping("/findFile")
     public Result findFile(@RequestParam Integer pageNum,
                            @RequestParam Integer pageSize,
@@ -75,6 +76,7 @@ public class CheckedController {
                                      @RequestParam("college")String college,
                                      @RequestParam(defaultValue = "") String name) {
         Page<SysFile> page = sysFileService.findALLFilesWithCheckClass( pageNum, pageSize, name, class_check,status,college);
+        logSaveService.saveLog("系主任"+class_check+"查看了"+college+"的文件",class_check);
         return Result.success(page);
     }
     //返回college_check对应需要审核的文件
@@ -86,6 +88,7 @@ public class CheckedController {
                                      @RequestParam("college")String college,
                                      @RequestParam(defaultValue = "") String name) {
         Page<SysFile> page = sysFileService.findALLFilesWithCheckCollege( pageNum, pageSize, name, college_check,status,college);
+        logSaveService.saveLog("院长"+college_check+"查看了"+college+"的文件",college_check);
         return Result.success(page);
     }
 }

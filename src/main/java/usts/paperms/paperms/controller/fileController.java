@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
@@ -32,6 +33,9 @@ public class fileController {
     private SysFileService sysFileService;
     @Autowired
     private RSAFileEncryptionService rsaFileEncryptionService;
+    @Autowired
+    private LogSaveService logSaveService;
+
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public  Result findPage(@RequestParam Integer pageNum,
@@ -44,7 +48,6 @@ public class fileController {
     }
     //将文件按照学院信息进行分页输出
     @GetMapping(value = "/pageByCollege", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public  Result findPageByCollege(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
                             @RequestParam(defaultValue = "") String college) {
@@ -76,7 +79,8 @@ public class fileController {
     }
     //文件预览方法
     @GetMapping("/preview")
-    public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName) {
+    public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName,
+                                                  @RequestParam("Actor") String Actor){
         try {
             // 构建文件路径
             String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
@@ -86,6 +90,7 @@ public class fileController {
             }
             // 读取文件内容并返回给客户端
             byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
+            logSaveService.saveLog(Actor+"预览了"+fileName,Actor);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(fileContent);
@@ -98,7 +103,8 @@ public class fileController {
     }
     //文件解密方法
     @PostMapping("/decrypt")
-    public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName) {
+    public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName,
+                                                  @RequestParam("Actor") String Actor){
         try {
             // 构建文件路径
             String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
@@ -109,11 +115,11 @@ public class fileController {
             }
             //文件解密
             rsaFileEncryptionService.decryptFile(new File(filePath));
+            logSaveService.saveLog(Actor+"解密了"+fileName,Actor);
             //将相应文件在数据库中isDecrypted字段设置为false
             SysFile sysFile = sysFileService.findByName(fileName);
             sysFile.setDecrypt(true);
             sysFileService.saveDecrypt(sysFile);
-
             return ResponseEntity.ok("File decrypted successfully");
         } catch (IOException e) {
             e.printStackTrace();
