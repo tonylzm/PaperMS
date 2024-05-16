@@ -33,6 +33,8 @@ public class Users {
     private String tel;
     @Column(name = "email")
     private String email;
+    //不加入数据库字段
+
 
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

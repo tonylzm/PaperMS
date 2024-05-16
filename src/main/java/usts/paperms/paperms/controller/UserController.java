@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.LoginRequest;
-import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.entity.User;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
@@ -73,93 +73,32 @@ public class UserController {
 
     //出卷人注册方法
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Users request) throws Exception {
-        // 检查用户名是否已经存在
-        if (userService.findUserByUsername(request.getUsername()) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-        }
-        String keys=rsaKeyGenerationService.custom_generateKeys();
-        //按换行符分别获取公钥和私钥
-        String[] key=keys.split("\n");
-        String publicKey = key[0];
-        String privateKey = key[1];
-        // 生成随机盐
-        String salt = passwordEncryption.generateSalt();
-        // 创建用户对象
-        Users user = new Users();
-        user.setRealName(request.getRealName());
-        user.setUsername(request.getUsername());
-        user.setCollege(request.getCollege());
-        user.setTel(request.getTel());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
-        // 其他用户信息...
-        // 创建用户角色并保存用户信息和角色信息
-        userService.createUserWithRoleAndSalt(user, "user", salt,publicKey,privateKey);
-        return ResponseEntity.ok("Registration successful");
+    public ResponseEntity<?> register(@RequestParam("actor")String actor,
+                                      @RequestBody Users request) throws Exception {
+        return ResponseEntity.ok(userService.register(request,"user",actor));
     }
 
     //审批人(系)注册方法
     @PostMapping("/check_register")
-    public ResponseEntity<?> check_register(@RequestBody Users request) throws Exception {
-        // 检查用户名是否已经存在
-        if (userService.findUserByUsername(request.getUsername()) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-        }
-        String keys=rsaKeyGenerationService.custom_generateKeys();
-        //按换行符分别获取公钥和私钥
-        String[] key=keys.split("\n");
-        String publicKey = key[0];
-        String privateKey = key[1];
-        // 生成随机盐
-        String salt = passwordEncryption.generateSalt();
-        // 创建用户对象
-        Users user = new Users();
-        user.setRealName(request.getRealName());
-        user.setUsername(request.getUsername());
-        user.setCollege(request.getCollege());
-        user.setTel(request.getTel());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
-        // 其他用户信息...
-        // 创建用户角色并保存用户信息和角色信息
-        userService.createUserWithRoleAndSalt(user, "check", salt,publicKey,privateKey);
-        return ResponseEntity.ok("Registration successful");
+    public ResponseEntity<?> check_register(@RequestParam("actor")String actor,
+                                            @RequestBody Users request) throws Exception {
+        return ResponseEntity.ok(userService.register(request,"check",actor));
     }
     //院长注册方法
     @PostMapping("/college_register")
-    public ResponseEntity<?> college_register(@RequestBody Users request) throws Exception {
-        // 检查用户名是否已经存在
-        if (userService.findUserByUsername(request.getUsername()) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-        }
-        String keys=rsaKeyGenerationService.custom_generateKeys();
-        System.out.println(request.getPassword());
-        //按换行符分别获取公钥和私钥
-        String[] key=keys.split("\n");
-        String publicKey = key[0];
-        String privateKey = key[1];
-        // 生成随机盐
-        String salt = passwordEncryption.generateSalt();
-        // 创建用户对象
-        Users user = new Users();
-        user.setRealName(request.getRealName());
-        user.setUsername(request.getUsername());
-        user.setCollege(request.getCollege());
-        user.setTel(request.getTel());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
-        // 其他用户信息...
-        // 创建用户角色并保存用户信息和角色信息
-        userService.createUserWithRoleAndSalt(user, "college", salt,publicKey,privateKey);
-        return ResponseEntity.ok("Registration successful");
+    public ResponseEntity<?> college_register(@RequestParam("actor")String actor,
+                                              @RequestBody Users request) throws Exception {
+        return ResponseEntity.ok(userService.register(request,"college",actor));
     }
+
     //角色权限变化方法
     @PostMapping("/role")
-    public ResponseEntity<?> changeRole(@RequestParam("username") String username,
+    public ResponseEntity<?> changeRole(@RequestParam("Actor")String Actor,
+                                        @RequestParam("username") String username,
                                         @RequestParam("role") String role) {
-        return ResponseEntity.ok(userService.updateRoleByUsername(username, role));
+        return ResponseEntity.ok(userService.updateRoleByUsername(Actor,username, role));
     }
+
     //查找相应权限的用户
     @PostMapping("/userrole")
     public Result findCheckedfile(@RequestParam Integer pageNum,
@@ -272,12 +211,14 @@ public class UserController {
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<?> deleteUser(@RequestBody Users request) {
+    public ResponseEntity<?> deleteUser(@RequestParam("actor")String actor,
+                                        @RequestBody Users request) {
         Users user = userService.findUserByUsername(request.getUsername());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         userService.deleteUser(user);
+        logSaveService.saveLog("用户"+user.getUsername()+"删除",actor);
         return ResponseEntity.ok("User deleted successfully");
     }
 

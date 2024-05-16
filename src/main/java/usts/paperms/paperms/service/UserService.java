@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import usts.paperms.paperms.Repository.KeyRepository;
@@ -12,6 +14,7 @@ import usts.paperms.paperms.Repository.SaltRepository;
 import usts.paperms.paperms.Repository.testUserRepository;
 import usts.paperms.paperms.entity.*;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.service.SecurityService.RSAKeyGenerationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,17 +31,18 @@ public class UserService {
     private KeyRepository keyRepository;
     @Autowired
     private PasswordEncryptionService passwordEncryption;
+    @Autowired
+    private LogSaveService logSaveService;
+    @Autowired
+    private RSAKeyGenerationService rsaKeyGenerationService;
 
     public Users createUserWithRoleAndSalt(Users users, String role, String saltValue,String publicKey,String privateKey) {
         // 创建用户对象
         Users savedUser = userRepository.save(users);
-
         // 创建角色对象
         UserRole roleObj = new UserRole();
         roleObj.setRole(role);
-
         roleObj.setUsers(savedUser);
-
         // 保存角色对象
         roleRepository.save(roleObj);
 
@@ -85,7 +89,6 @@ public class UserService {
             return "用户不存在";
         }
         Salt salt = saltOptional.get();
-        System.out.println(salt.getValue());
         //将旧密码加盐
         old=passwordEncryption.encryptPassword(old,salt.getValue());
         //检测旧密码是否正确
@@ -101,6 +104,7 @@ public class UserService {
         saltRepository.save(saltOptional.get());
         user.setPassword(password);
         userRepository.save(user);
+        logSaveService.saveLog("用户修改了密码",user.getRealName());
         return "修改成功";
     }
 
@@ -121,8 +125,10 @@ public class UserService {
         saltRepository.save(saltOptional.get());
         user.setPassword(password);
         userRepository.save(user);
+        logSaveService.saveLog("用户修改了密码",user.getRealName());
         return "修改成功";
     }
+
 
     //用户修改邮箱
     public Boolean changeEmail(String username, String email) {
@@ -132,6 +138,7 @@ public class UserService {
         }
         user.setEmail(email);
         userRepository.save(user);
+        logSaveService.saveLog("用户修改了邮箱",user.getRealName());
         return true;
     }
 
@@ -230,13 +237,14 @@ public class UserService {
         return userRepository.findUsersByUserRole(role, college,name,pageable);
     }
     //更新用户角色
-    public String updateRoleByUsername(String username, String role) {
+    public String updateRoleByUsername(String Actor,String username, String role) {
         Users user = userRepository.findByUsername(username);
         Optional<UserRole> userRoleOptional = roleRepository.findByUsers(user);
         if (userRoleOptional.isPresent()) {
             UserRole userRole = userRoleOptional.get();
             userRole.setRole(role);
             roleRepository.save(userRole);
+            logSaveService.saveLog("用户"+Actor+"修改了用户"+username+"的权限,新的权限为"+role,Actor);
             return "修改成功";
         }else {
             return "用户不存在";
@@ -247,7 +255,30 @@ public class UserService {
     public List<Users> findUsersByUser(String role, String college) {
         return userRepository.findUsersByUser(role, college);
     }
-
-
     // 其他操作方法
+
+    public String register(Users request,String role,String actor) throws Exception {
+        // 检查用户名是否已经存在
+        if (findUserByUsername(request.getUsername()) != null) {
+            return "用户名已存在";
+        }
+        String keys=rsaKeyGenerationService.custom_generateKeys();
+        //按换行符分别获取公钥和私钥
+        String[] key=keys.split("\n");
+        String publicKey = key[0];
+        String privateKey = key[1];
+        // 生成随机盐
+        String salt = passwordEncryption.generateSalt();
+        // 创建用户对象
+        Users user = new Users();
+        user.setRealName(request.getRealName());
+        user.setUsername(request.getUsername());
+        user.setCollege(request.getCollege());
+        user.setTel(request.getTel());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncryption.encryptPassword(request.getPassword(),salt)); // 此处的密码需要在 Service 层加密
+        createUserWithRoleAndSalt(user, role, salt,publicKey,privateKey);
+        logSaveService.saveLog("用户"+request.getUsername()+"账号注册",actor);
+        return "注册成功";
+    }
 }

@@ -120,7 +120,7 @@ public class uploadController {
             sysFile.setClasses(data.getString("class"));
             sysFile.setCollege(data.getString("college"));
             sysFileService.save(sysFile,classCheck,collegeCheck);
-            logSaveService.saveLog("用户"+username+"上传了"+filename+"文件",username);
+            logSaveService.saveLog("用户"+username+"上传了"+filename+"文件",data.getString("realName"));
             return new ResponseEntity<>("文件上传成功", HttpStatus.OK);
         } catch (IOException ex) {
             return new ResponseEntity<>("无法存储文件，请再试一次！", HttpStatus.INTERNAL_SERVER_ERROR);
