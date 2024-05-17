@@ -1,5 +1,6 @@
 package usts.paperms.paperms.service.SecurityService;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.FileOutputStream;
 import java.security.*;
@@ -8,9 +9,12 @@ import java.util.Base64;
 @Service
 public class RSAKeyGenerationService {
 
-    private static final String PUBLIC_KEY_FILE = "src/main/resources/static/files/security/public.der";
-    private static final String PRIVATE_KEY_FILE = "src/main/resources/static/files/security/private.der";
-
+    //private static final String PUBLIC_KEY_FILE = "BOOT-INF/classes/static/files/security/public.der";
+    @Value("${service.publickey-dir}")
+    private String PUBLIC_KEY_FILE;
+    //private static final String PRIVATE_KEY_FILE = "BOOT-INF/classes/static/files/security/private.der";
+    @Value("${service.privatekey-dir}")
+    private String PRIVATE_KEY_FILE;
     //RSA密钥生成（服务器端）
     public void generateKeys() throws Exception {
         // Generate key pair

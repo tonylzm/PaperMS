@@ -2,6 +2,7 @@ package usts.paperms.paperms.service;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,9 @@ import java.util.Optional;
 
 @Service
 public class SysFileService {
-    private static final String ENCRYPTED_FILE_DIRECTORY = "src/main/resources/static/files/";
+    //private static final String ENCRYPTED_FILE_DIRECTORY = "src/main/resources/static/files/";
+    @Value("${spring.servlet.multipart.location}")
+    private String ENCRYPTED_FILE_DIRECTORY;
     @Autowired
     private SysFileRepository sysFileRepository;
     @Autowired

@@ -1,6 +1,7 @@
 package usts.paperms.paperms.service.SecurityService;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.service.impl.InMemoryMultipartFile;
@@ -22,7 +23,9 @@ import java.util.Base64;
 
 @Service
 public class DecryptFileService {
-    private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
+    //private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
+    @Value("${service.privatekey-dir}")
+    private String PRIVATE_KEY_FILE_PATH;
     public MultipartFile decryptFile(MultipartFile encryptedFile, String key) throws IOException {
         try {
             byte[] encryptedData = encryptedFile.getBytes();

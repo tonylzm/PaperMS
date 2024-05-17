@@ -1,6 +1,7 @@
 package usts.paperms.paperms.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +33,9 @@ import java.security.NoSuchAlgorithmException;
 public class downloadController {
     @Autowired
     private SysFileService sysFileService;
-    private static final String FILE_DIRECTORY = "src/main/resources/static/files/";
+    //private static final String FILE_DIRECTORY = "src/main/resources/static/files/";
+    @Value("${spring.servlet.multipart.location}")
+    private String FILE_DIRECTORY;
     // 省略其他注入和方法
 // 创建一个 Resource 对象来包装错误消息
     Resource errorResource = new ByteArrayResource("下载错误".getBytes());

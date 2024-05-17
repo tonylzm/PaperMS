@@ -1,6 +1,9 @@
 package usts.paperms.paperms.service.SecurityService;
 
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,21 +18,43 @@ import java.security.spec.X509EncodedKeySpec;
 
 @Service
 public class RSAFileEncryptionService {
+    @Autowired
+    private RSAKeyGenerationService rsaKeyGenerationService;
 
-    private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
-    private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
-    private static final String ENCRYPTED_FILE_DIRECTORY = "src/main/resources/static/files/";
-    private static final String AES_KEY_FILE_PATH = "src/main/resources/static/files/AESkey/";
+    //private static final String PRIVATE_KEY_FILE_PATH = "BOOT-INF/classes/static/files/security/private.der";
+    @Value("${service.privatekey-dir}")
+    private String PRIVATE_KEY_FILE_PATH;
+    //private static final String PUBLIC_KEY_FILE_PATH = "BOOT-INF/classes/resources/static/files/security/public.der";
+    @Value("${service.publickey-dir}")
+    private String PUBLIC_KEY_FILE_PATH;
+    //private static final String ENCRYPTED_FILE_DIRECTORY = "src/main/resources/static/files/";
+    @Value("${spring.servlet.multipart.location}")
+    private String ENCRYPTED_FILE_DIRECTORY;
+    //private static final String AES_KEY_FILE_PATH = "src/main/resources/static/files/AESkey/";
+    @Value("${key.upload-dir}")
+    private String AES_KEY_FILE_PATH;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public RSAFileEncryptionService() throws Exception {
-        // Load private key
-        privateKey = loadPrivateKey(PRIVATE_KEY_FILE_PATH);
+    public RSAFileEncryptionService() {
+        // Constructor remains empty
+    }
 
-        // Load public key
+    @PostConstruct
+    public void init() throws Exception {
+        checkAndGenerateKeys();
+        privateKey = loadPrivateKey(PRIVATE_KEY_FILE_PATH);
         publicKey = loadPublicKey(PUBLIC_KEY_FILE_PATH);
+    }
+
+    private void checkAndGenerateKeys() throws Exception {
+        File privateKeyFile = new File(PRIVATE_KEY_FILE_PATH);
+        File publicKeyFile = new File(PUBLIC_KEY_FILE_PATH);
+
+        if (!privateKeyFile.exists() || !publicKeyFile.exists()) {
+            rsaKeyGenerationService.generateKeys();
+        }
     }
 
     private PrivateKey loadPrivateKey(String filePath) throws Exception {

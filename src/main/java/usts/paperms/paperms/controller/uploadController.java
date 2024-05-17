@@ -2,6 +2,7 @@ package usts.paperms.paperms.controller;
 
 // 导入需要的包和类
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,14 +31,12 @@ import java.util.Date;
 @RestController
 @RequestMapping("/api/upload")
 public class uploadController {
-    private static final String UPLOAD_DIR = "src/main/resources/static/files/";
-    private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
-
-    private static final String PRIVATE_KEY_FILE_PATH = "src/main/resources/static/files/security/private.der";
-    private static final String OUTPUT_DIRECTORY = "src/main/resources/static/files/enter/";
-
-    private static final String AES_KEY_FILE_PATH = "src/main/resources/static/files/AESkey/11.pdf.key";
-
+    //private static final String UPLOAD_DIR = "src/main/resources/static/files/";
+    @Value("${spring.servlet.multipart.location}")
+    private String UPLOAD_DIR;
+    //private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
+    @Value("${service.publickey-dir}")
+    private String PUBLIC_KEY_FILE_PATH;
 
     @Autowired
     private SysFileService sysFileService;
@@ -137,28 +136,6 @@ public class uploadController {
             String publicKey = Base64.getEncoder().encodeToString(encodedKey);
             // 返回公钥给前端
             return ResponseEntity.ok(publicKey);
-        } catch (IOException e) {
-            // 处理文件读取异常
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        } catch (Exception e) {
-            // 处理其他异常
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-
-    //发送AES密钥
-    @GetMapping("/aeskey")
-    public ResponseEntity<String> getAESKey() {
-        try {
-            // 读取AES密钥文件内容
-            byte[] encodedKey = Files.readAllBytes(Paths.get(AES_KEY_FILE_PATH));
-            // 将AES密钥编码为Base64字符串，以便在HTTP响应中发送
-            String aesKey = Base64.getEncoder().encodeToString(encodedKey);
-            // 返回AES密钥给前端
-            return ResponseEntity.ok(aesKey);
         } catch (IOException e) {
             // 处理文件读取异常
             e.printStackTrace();

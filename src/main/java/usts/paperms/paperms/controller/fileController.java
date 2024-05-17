@@ -8,6 +8,7 @@ package usts.paperms.paperms.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,7 +29,9 @@ import java.nio.file.Paths;
 @RestController
 @RequestMapping("/api/files")
 public class fileController {
-    private static final String DOCUMENTS_DIRECTORY ="src/main/resources/static/files/";
+    //private static final String DOCUMENTS_DIRECTORY ="src/main/resources/static/files/";
+    @Value("${spring.servlet.multipart.location}")
+    private String DOCUMENTS_DIRECTORY;
     @Autowired
     private SysFileService sysFileService;
     @Autowired
