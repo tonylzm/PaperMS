@@ -34,6 +34,12 @@ public class RSAFileEncryptionService {
     @Value("${key.upload-dir}")
     private String AES_KEY_FILE_PATH;
 
+
+//    @Value("${public_key}")
+//    private String publicKeyStr;
+//    @Value("${private_key}")
+//    private String privateKeyStr;
+
     private PrivateKey privateKey;
     private PublicKey publicKey;
 

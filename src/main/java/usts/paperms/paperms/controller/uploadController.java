@@ -34,6 +34,8 @@ public class uploadController {
     //private static final String UPLOAD_DIR = "src/main/resources/static/files/";
     @Value("${spring.servlet.multipart.location}")
     private String UPLOAD_DIR;
+    @Value("${service.privatekey-dir}")
+    private String PRIVATE_KEY_FILE_PATH;
     //private static final String PUBLIC_KEY_FILE_PATH = "src/main/resources/static/files/security/public.der";
     @Value("${service.publickey-dir}")
     private String PUBLIC_KEY_FILE_PATH;
@@ -132,6 +134,25 @@ public class uploadController {
         try {
             // 读取公钥文件内容
             byte[] encodedKey = Files.readAllBytes(Paths.get(PUBLIC_KEY_FILE_PATH));
+            // 将公钥编码为Base64字符串，以便在HTTP响应中发送
+            String publicKey = Base64.getEncoder().encodeToString(encodedKey);
+            // 返回公钥给前端
+            return ResponseEntity.ok(publicKey);
+        } catch (IOException e) {
+            // 处理文件读取异常
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            // 处理其他异常
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @GetMapping("/private")
+    public ResponseEntity<String> getPrivateKey() {
+        try {
+            // 读取公钥文件内容
+            byte[] encodedKey = Files.readAllBytes(Paths.get(PRIVATE_KEY_FILE_PATH));
             // 将公钥编码为Base64字符串，以便在HTTP响应中发送
             String publicKey = Base64.getEncoder().encodeToString(encodedKey);
             // 返回公钥给前端
