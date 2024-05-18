@@ -117,82 +117,105 @@ public class RSAFileEncryptionService {
 //    }
 
     // 加密文件（文件为MultipartFile类型）
-    public File encryptFile(MultipartFile inputFile,String filename) throws Exception {
+    public String encryptFile(MultipartFile inputFile,String filename) throws Exception {
         // 生成AES密钥
         SecretKey aesKey = generateAESKey();
         // 将AES密钥加密
         byte[] encryptedAESKey = encryptAESKey(aesKey);
-        File file = convertByteArrayToFile(encryptedAESKey, filename + ".key");
-        String url= MinIoUtil.upload("keys",filename+".key",file);
+        try(ByteArrayOutputStream byteArrayOutputStream1 = new ByteArrayOutputStream()) {
+            byteArrayOutputStream1.write(encryptedAESKey);
+            InputStream file = new ByteArrayInputStream(byteArrayOutputStream1.toByteArray());
+            MinIoUtil.upload("keys", filename + ".key", file);
+        }
         // 加密文件内容
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-        File encryptedFile = new File(filename);
         try (InputStream fileInputStream = inputFile.getInputStream();
-             OutputStream fileOutputStream = new FileOutputStream(encryptedFile)) {
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             byte[] inputBytes = fileInputStream.readAllBytes();
             byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
-            fileOutputStream.write(encryptedBytes);
+            byteArrayOutputStream.write(encryptedBytes);
+            // 上传加密后的文件内容
+            InputStream encryptedFileInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            return MinIoUtil.upload(minIoProperties.getBucketName(), filename,encryptedFileInputStream);
         }
-        // 将加密后的AES密钥写入文件
-        return encryptedFile;
     }
 
     //加密文件（文件为byte[]类型）
-    public File encryptFiles(byte[] inputFile,String filename) throws Exception {
+    public String encryptFiles(byte[] inputFile,String filename) throws Exception {
         // 生成AES密钥
         SecretKey aesKey = generateAESKey();
         // 将AES密钥加密
         byte[] encryptedAESKey = encryptAESKey(aesKey);
-        File file = convertByteArrayToFile(encryptedAESKey, filename + ".key");
-        String url= MinIoUtil.upload("keys",filename+".key",file);
+        try(ByteArrayOutputStream byteArrayOutputStream1 = new ByteArrayOutputStream()) {
+            byteArrayOutputStream1.write(encryptedAESKey);
+            InputStream file = new ByteArrayInputStream(byteArrayOutputStream1.toByteArray());
+            MinIoUtil.upload("keys", filename + ".key", file);
+        }
         // 加密文件内容
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-        File encryptedFile = new File(filename);
+//        File encryptedFile = new File(filename);
+//        try (InputStream fileInputStream = new ByteArrayInputStream(inputFile);
+//             OutputStream fileOutputStream = new FileOutputStream(encryptedFile)) {
+//            byte[] inputBytes = fileInputStream.readAllBytes();
+//            byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
+//            fileOutputStream.write(encryptedBytes);
+//        }
+//        return encryptedFile;
         try (InputStream fileInputStream = new ByteArrayInputStream(inputFile);
-             OutputStream fileOutputStream = new FileOutputStream(encryptedFile)) {
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             byte[] inputBytes = fileInputStream.readAllBytes();
             byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
-            fileOutputStream.write(encryptedBytes);
-        }
-        return encryptedFile;
-    }
-
-    public void decryptFile(File encryptedFile) throws Exception {
-        // 从文件中读取加密的AES密钥
-        File fileInputStreams = MinIoUtil.getFile("keys",encryptedFile.getName()+".key");
-        byte [] fileContent = Files.readAllBytes(fileInputStreams.toPath());
-        //minio读取加密的AES密钥
-        // 使用RSA私钥解密AES密钥
-        SecretKey aesKey = decryptAESKey(fileContent);
-        // 解密文件内容并替换原加密文件
-        Cipher aesCipher = Cipher.getInstance("AES");
-        aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
-        try (FileInputStream fileInputStream = new FileInputStream(encryptedFile)) {
-            byte[] encryptedBytes = fileInputStream.readAllBytes();
-            byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
-            File file = convertByteArrayToFile(decryptedBytes, encryptedFile.getName());
-            MinIoUtil.deleteFile("keys",encryptedFile.getName()+".key");
+            byteArrayOutputStream.write(encryptedBytes);
+            // 上传加密后的文件内容
+            InputStream encryptedFileInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            return MinIoUtil.upload(minIoProperties.getBucketName(), filename,encryptedFileInputStream);
         }
     }
 
-    public File decryptFiles(File encryptedFile) throws Exception {
-        // 从文件中读取加密的AES密钥
-        // 使用RSA私钥解密AES密钥
-        File fileInputStreams = MinIoUtil.getFile("keys",encryptedFile.getName()+".key");
-        byte [] fileContent = Files.readAllBytes(fileInputStreams.toPath());
-        SecretKey aesKey = decryptAESKey(fileContent);
-        // 解密文件内容并替换原加密文件
+//    public void decryptFile(File encryptedFile) throws Exception {
+//        // 从文件中读取加密的AES密钥
+//        File fileInputStreams = MinIoUtil.getFile("keys",encryptedFile.getName()+".key");
+//        byte [] fileContent = Files.readAllBytes(fileInputStreams.toPath());
+//        //minio读取加密的AES密钥
+//        // 使用RSA私钥解密AES密钥
+//        SecretKey aesKey = decryptAESKey(fileContent);
+//        // 解密文件内容并替换原加密文件
+//        Cipher aesCipher = Cipher.getInstance("AES");
+//        aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
+//        try (FileInputStream fileInputStream = new FileInputStream(encryptedFile)) {
+//            byte[] encryptedBytes = fileInputStream.readAllBytes();
+//            byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
+//            File file = convertByteArrayToFile(decryptedBytes, encryptedFile.getName());
+//            MinIoUtil.deleteFile("keys",encryptedFile.getName()+".key");
+//        }
+//    }
+
+    // 解密文件的方法
+    public String decryptFiles(String encryptedFileName) throws Exception {
+        // 从MinIO下载加密的AES密钥
+        InputStream encryptedKeyStream = MinIoUtil.getFileStream("keys", encryptedFileName + ".key");
+        byte[] encryptedKeyBytes = encryptedKeyStream.readAllBytes();
+        SecretKey aesKey = decryptAESKey(encryptedKeyBytes);
+
+        // 从MinIO下载加密的文件内容
+        InputStream encryptedFileStream = MinIoUtil.getFileStream(minIoProperties.getBucketName(),encryptedFileName);
+        byte[] encryptedFileBytes = encryptedFileStream.readAllBytes();
+
+        // 解密文件内容
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
-        try (FileInputStream fileInputStream = new FileInputStream(encryptedFile)) {
-            byte[] encryptedBytes = fileInputStream.readAllBytes();
-            byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
-            File file = convertByteArrayToFile(decryptedBytes, encryptedFile.getName());
-            MinIoUtil.deleteFile("keys",encryptedFile.getName()+".key");
-            return file;
-        }
+        byte[] decryptedBytes = aesCipher.doFinal(encryptedFileBytes);
+
+        // 上传解密后的文件内容到MinIO
+        InputStream decryptedFileInputStream = new ByteArrayInputStream(decryptedBytes);
+        String decryptedFileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), encryptedFileName, decryptedFileInputStream);
+
+        // 删除存储的AES密钥文件
+        MinIoUtil.deleteFile("keys", encryptedFileName + ".key");
+
+        return decryptedFileUrl;
     }
 
     // 生成AES密钥

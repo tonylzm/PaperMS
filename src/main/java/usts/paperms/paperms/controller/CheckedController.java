@@ -75,7 +75,7 @@ public class CheckedController {
                                      @RequestParam("status") String status,
                                      @RequestParam("college")String college,
                                      @RequestParam(defaultValue = "") String name) {
-        Page<SysFile> page = sysFileService.findALLFilesWithCheckClass( pageNum, pageSize, name, class_check,status,college);
+        Page<SysFile> page = sysFileService.findALLFilesCheckClass( pageNum, pageSize, name, class_check,status,college);
         logSaveService.saveLog("系主任"+class_check+"查看了"+college+"的文件",class_check);
         return Result.success(page);
     }

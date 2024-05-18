@@ -110,10 +110,7 @@ public class uploadController {
             if(!md5.equals(md5Checksum)){
                 return new ResponseEntity<>("文件完整性检查不通过", HttpStatus.BAD_REQUEST);
             }
-            File encryptedFiles = rsaFileEncryptionService.encryptFile(files,filename);
-            // 将文件复制到目标位置
-            MinIoUtil.upload(minIoProperties.getBucketName(), filename,encryptedFiles);
-
+            rsaFileEncryptionService.encryptFile(files,filename);
 
             SysFile sysFile = new SysFile();
             sysFile.setName(filename);

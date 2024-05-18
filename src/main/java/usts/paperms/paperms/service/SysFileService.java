@@ -22,6 +22,7 @@ import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -72,7 +73,7 @@ public class SysFileService {
             Optional<Check> checkOptional = checkRespository.findBySysFile(existingFile);
             if (checkOptional.isPresent()) {
                 Check check = checkOptional.get();
-                check.setCheckStatus("未审核");
+                check.setCheckStatus("待审核");
                 check.setClassCheck(classCheck);
                 check.setCollegeCheck(collegeCheck);
                 check.setOpinion("");
@@ -85,7 +86,7 @@ public class SysFileService {
 
             Check check = new Check();
             check.setSysFile(sysFile);
-            check.setCheckStatus("未审核");
+            check.setCheckStatus("待审核");
             check.setClassCheck(classCheck);
             check.setCollegeCheck(collegeCheck);
             checkRespository.save(check);
@@ -172,12 +173,10 @@ public class SysFileService {
         Optional<Check> checkOptional = checkRespository.findBySysFile(sysFile);
         if(checkOptional.isPresent()) {
             //无论是否通过，都需要重新加密文件
-            File file=MinIoUtil.getFile("paperms",fileName);
-            byte[] fileContent = Files.readAllBytes(file.toPath());
+            InputStream file=MinIoUtil.getFileStream("paperms",fileName);
+            byte[] fileContent = file.readAllBytes();
             //文件加密
-            File encryptedFiles=rsaFileEncryptionService.encryptFiles(fileContent,fileName);
-            //更新文件信息
-            String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), fileName,encryptedFiles);
+            rsaFileEncryptionService.encryptFiles(fileContent,fileName);
             //将文件解密状态设置为false
             sysFile.setDecrypt(false);
             sysFileRepository.save(sysFile);
@@ -232,11 +231,11 @@ public class SysFileService {
         return sysFileRepository.findAllFilesWithCheckStatus(produced,name,pageable);
     }
     //分页查找classCheck相对应的文件
-    public Page<SysFile> findALLFilesWithCheckClass(Integer pageNum, Integer pageSize, String name,String class_check,String status,String college) {
+    public Page<SysFile> findALLFilesCheckClass(Integer pageNum, Integer pageSize, String name,String class_check,String status,String college) {
         // 构建分页请求对象
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         // 调用 Spring Data JPA 的方法执行分页查询
-        return sysFileRepository.findAllFilesWithCheckClass(status,college,name,class_check,pageable);
+        return sysFileRepository.findAllFilesCheckClasses(status,college,name,class_check,pageable);
     }
     //分页查找collegeCheck相对应的文件
     public Page<SysFile> findALLFilesWithCheckCollege(Integer pageNum, Integer pageSize, String name,String college_check,String status,String college) {

@@ -91,8 +91,8 @@ public class fileController {
                                                   @RequestParam("Actor") String Actor){
         try {
             //minio文件存储系统
-            File fileInputStream = MinIoUtil.getFile(minIoProperties.getBucketName(),fileName);
-            byte [] fileContent = Files.readAllBytes(fileInputStream.toPath());
+            InputStream fileInputStream = MinIoUtil.getFileStream(minIoProperties.getBucketName(),fileName);
+            byte [] fileContent = fileInputStream.readAllBytes();
             logSaveService.saveLog(Actor+"预览了"+fileName,Actor);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
@@ -109,10 +109,7 @@ public class fileController {
     public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName,
                                                   @RequestParam("Actor") String Actor){
         try {
-            //minio文件存储系统
-            File fileInputStream = MinIoUtil.getFile(minIoProperties.getBucketName(),fileName);
-            File file=rsaFileEncryptionService.decryptFiles(fileInputStream);
-            MinIoUtil.upload(minIoProperties.getBucketName(),fileName,file);
+            rsaFileEncryptionService.decryptFiles(fileName);
             logSaveService.saveLog(Actor+"解密了"+fileName,Actor);
             //将相应文件在数据库中isDecrypted字段设置为false
             SysFile sysFile = sysFileService.findByName(fileName);
@@ -131,7 +128,7 @@ public class fileController {
     @PostMapping("/check")
     public ResponseEntity<String> checkDocument(@RequestParam("fileName") String fileName) {
         // 调用 SysFileService 的方法查询文件审核状态
-        String checkStatus = sysFileService.findCheckByFileName(fileName).orElse("未审核");
+        String checkStatus = sysFileService.findCheckByFileName(fileName).orElse("待审核");
         return ResponseEntity.ok(checkStatus);
     }
 
