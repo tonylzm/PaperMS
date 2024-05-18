@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 @Service
 public class RSAFileEncryptionService {
@@ -35,53 +36,77 @@ public class RSAFileEncryptionService {
     private String AES_KEY_FILE_PATH;
 
 
-//    @Value("${public_key}")
-//    private String publicKeyStr;
-//    @Value("${private_key}")
-//    private String privateKeyStr;
+    @Value("${publicKey}")
+    private String publicKeyStr;
+    @Value("${privateKey}")
+    private String privateKeyStr;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public RSAFileEncryptionService() {
-        // Constructor remains empty
-    }
-
+//    public RSAFileEncryptionService() {
+//        // Constructor remains empty
+//        //将字符串转换为公钥和私钥
+//        try {
+//            byte[] publicBytes = Base64.getDecoder().decode(publicKeyStr);
+//            byte[] privateBytes = Base64.getDecoder().decode(privateKeyStr);
+//            X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(publicBytes);
+//            PKCS8EncodedKeySpec privateSpec = new PKCS8EncodedKeySpec(privateBytes);
+//            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//            publicKey = keyFactory.generatePublic(publicSpec);
+//            privateKey = keyFactory.generatePrivate(privateSpec);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
     @PostConstruct
     public void init() throws Exception {
-        checkAndGenerateKeys();
-        privateKey = loadPrivateKey(PRIVATE_KEY_FILE_PATH);
-        publicKey = loadPublicKey(PUBLIC_KEY_FILE_PATH);
+        this.publicKey = loadPublicKey(publicKeyStr);
+        this.privateKey = loadPrivateKey(privateKeyStr);
     }
 
-    private void checkAndGenerateKeys() throws Exception {
-        File privateKeyFile = new File(PRIVATE_KEY_FILE_PATH);
-        File publicKeyFile = new File(PUBLIC_KEY_FILE_PATH);
-
-        if (!privateKeyFile.exists() || !publicKeyFile.exists()) {
-            rsaKeyGenerationService.generateKeys();
-        }
-    }
-
-    private PrivateKey loadPrivateKey(String filePath) throws Exception {
-        FileInputStream fis = new FileInputStream(filePath);
-        byte[] keyBytes = new byte[fis.available()];
-        fis.read(keyBytes);
-        fis.close();
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+    private PublicKey loadPublicKey(String pem) throws Exception {
+        String publicKeyPEM = pem
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+        byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(spec);
+        return keyFactory.generatePublic(keySpec);
     }
 
-    private PublicKey loadPublicKey(String filePath) throws Exception {
-        FileInputStream fis = new FileInputStream(filePath);
-        byte[] keyBytes = new byte[fis.available()];
-        fis.read(keyBytes);
-        fis.close();
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+    private PrivateKey loadPrivateKey(String pem) throws Exception {
+        String privateKeyPEM = pem
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s", "");
+        byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(spec);
+        return keyFactory.generatePrivate(keySpec);
     }
+
+//    private PrivateKey loadPrivateKey(String filePath) throws Exception {
+//        FileInputStream fis = new FileInputStream(filePath);
+//        byte[] keyBytes = new byte[fis.available()];
+//        fis.read(keyBytes);
+//        fis.close();
+//        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        return keyFactory.generatePrivate(spec);
+//    }
+//
+//    private PublicKey loadPublicKey(String filePath) throws Exception {
+//        FileInputStream fis = new FileInputStream(filePath);
+//        byte[] keyBytes = new byte[fis.available()];
+//        fis.read(keyBytes);
+//        fis.close();
+//        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        return keyFactory.generatePublic(spec);
+//    }
 
     // 加密文件（文件为MultipartFile类型）
     public File encryptFile(MultipartFile inputFile,String filename) throws Exception {
@@ -160,16 +185,14 @@ public class RSAFileEncryptionService {
         return keyGen.generateKey();
     }
 
-    // 使用RSA公钥加密AES密钥
-    private byte[] encryptAESKey(SecretKey aesKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("RSA");
+    public byte[] encryptAESKey(SecretKey aesKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return cipher.doFinal(aesKey.getEncoded());
     }
 
-    // 使用RSA私钥解密AES密钥
-    private SecretKey decryptAESKey(byte[] encryptedAESKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
-        Cipher cipher = Cipher.getInstance("RSA");
+    public SecretKey decryptAESKey(byte[] encryptedAESKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         byte[] decryptedAESKey = cipher.doFinal(encryptedAESKey);
         return new SecretKeySpec(decryptedAESKey, "AES");

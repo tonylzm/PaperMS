@@ -40,6 +40,9 @@ public class uploadController {
     @Value("${service.publickey-dir}")
     private String PUBLIC_KEY_FILE_PATH;
 
+    @Value("${publicKey}")
+    private String publicKeyStr;
+
     @Autowired
     private SysFileService sysFileService;
     @Autowired
@@ -129,25 +132,24 @@ public class uploadController {
             throw new RuntimeException(e);
         }
     }
+
     @GetMapping("/public")
     public ResponseEntity<String> getPublicKey() {
         try {
-            // 读取公钥文件内容
-            byte[] encodedKey = Files.readAllBytes(Paths.get(PUBLIC_KEY_FILE_PATH));
-            // 将公钥编码为Base64字符串，以便在HTTP响应中发送
-            String publicKey = Base64.getEncoder().encodeToString(encodedKey);
+            // 去掉PEM标记行和多余的空白字符，并进行Base64编码
+            String publicKey = publicKeyStr
+                    .replace("-----BEGIN PUBLIC KEY-----", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .replaceAll("\\s", "");
             // 返回公钥给前端
             return ResponseEntity.ok(publicKey);
-        } catch (IOException e) {
-            // 处理文件读取异常
+        } catch (Exception e) {
+            // 处理异常
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
-        } catch (Exception e) {
-            // 处理其他异常
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
         }
     }
+
     @GetMapping("/private")
     public ResponseEntity<String> getPrivateKey() {
         try {
