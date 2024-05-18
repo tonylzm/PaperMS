@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.common.Result;
+import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
@@ -23,6 +25,7 @@ import usts.paperms.paperms.service.SysFileService;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -38,6 +41,8 @@ public class fileController {
     private RSAFileEncryptionService rsaFileEncryptionService;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    MinIoProperties minIoProperties;
 
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
 
@@ -85,14 +90,9 @@ public class fileController {
     public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName,
                                                   @RequestParam("Actor") String Actor){
         try {
-            // 构建文件路径
-            String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
-            // 检查文件是否存在
-            if (!Files.exists(Paths.get(filePath))) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-            // 读取文件内容并返回给客户端
-            byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
+            //minio文件存储系统
+            File fileInputStream = MinIoUtil.getFile(minIoProperties.getBucketName(),fileName);
+            byte [] fileContent = Files.readAllBytes(fileInputStream.toPath());
             logSaveService.saveLog(Actor+"预览了"+fileName,Actor);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
@@ -109,15 +109,10 @@ public class fileController {
     public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName,
                                                   @RequestParam("Actor") String Actor){
         try {
-            // 构建文件路径
-            String filePath = DOCUMENTS_DIRECTORY + File.separator + fileName;
-
-            // 检查文件是否存在
-            if (!Files.exists(Paths.get(filePath))) {
-                return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
-            }
-            //文件解密
-            rsaFileEncryptionService.decryptFile(new File(filePath));
+            //minio文件存储系统
+            File fileInputStream = MinIoUtil.getFile(minIoProperties.getBucketName(),fileName);
+            File file=rsaFileEncryptionService.decryptFiles(fileInputStream);
+            MinIoUtil.upload(minIoProperties.getBucketName(),fileName,file);
             logSaveService.saveLog(Actor+"解密了"+fileName,Actor);
             //将相应文件在数据库中isDecrypted字段设置为false
             SysFile sysFile = sysFileService.findByName(fileName);

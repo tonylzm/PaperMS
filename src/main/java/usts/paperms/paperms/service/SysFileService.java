@@ -13,11 +13,14 @@ import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.Repository.CheckRespository;
 import usts.paperms.paperms.Repository.HistoryChecked;
 import usts.paperms.paperms.Repository.SysFileRepository;
+import usts.paperms.paperms.common.MinIoUtil;
+import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.Check;
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.entity.historychecked;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,6 +47,8 @@ public class SysFileService {
     private LogSaveService logSaveService;
     @Autowired
     private HistoryFileService historyFileService;
+    @Autowired
+    MinIoProperties minIoProperties;
 
     public SysFile save(SysFile sysFile,String classCheck,String collegeCheck) {
 
@@ -167,17 +172,12 @@ public class SysFileService {
         Optional<Check> checkOptional = checkRespository.findBySysFile(sysFile);
         if(checkOptional.isPresent()) {
             //无论是否通过，都需要重新加密文件
-            //加密文件
-            // 构建文件路径
-            String filePath = ENCRYPTED_FILE_DIRECTORY + fileName;
-            // 检查文件是否存在
-            if (!Files.exists(Paths.get(filePath))) {
-                return;
-            }
-            // 读取文件内容转化为MultipartFile类型
-            byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
+            File file=MinIoUtil.getFile("paperms",fileName);
+            byte[] fileContent = Files.readAllBytes(file.toPath());
             //文件加密
-            rsaFileEncryptionService.encryptFiles(fileContent,fileName);
+            File encryptedFiles=rsaFileEncryptionService.encryptFiles(fileContent,fileName);
+            //更新文件信息
+            String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), fileName,encryptedFiles);
             //将文件解密状态设置为false
             sysFile.setDecrypt(false);
             sysFileRepository.save(sysFile);
@@ -205,26 +205,16 @@ public class SysFileService {
         Optional<Check> checkOptional = checkRespository.findBySysFile(sysFile);
         if(checkOptional.isPresent()) {
             //无论审核是否通过，都将源文件删除，只保留数据库信息
-            // 构建文件路径
-            String filePath = ENCRYPTED_FILE_DIRECTORY + fileName;
-            // 检查文件是否存在
-            if (!Files.exists(Paths.get(filePath))) {
-                return;
-            }
             // 删除文件
-            try {
-                Files.delete(Paths.get(filePath));
-                //将sys_file表中所有信息删除，转存到history_checked表中
-                historychecked newHistoryChecked = new historychecked();
-                BeanUtils.copyProperties(sysFile, newHistoryChecked);
-                newHistoryChecked.setId(null);
-                newHistoryChecked.setStatus(status);
-                newHistoryChecked.setDate(getNowTime());
-                newHistoryChecked.setOpinion(opinion);
-                historyFileService.saveHistoryFile(newHistoryChecked);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            MinIoUtil.deleteFile("paperms",fileName);
+            //将sys_file表中所有信息删除，转存到history_checked表中
+            historychecked newHistoryChecked = new historychecked();
+            BeanUtils.copyProperties(sysFile, newHistoryChecked);
+            newHistoryChecked.setId(null);
+            newHistoryChecked.setStatus(status);
+            newHistoryChecked.setDate(getNowTime());
+            newHistoryChecked.setOpinion(opinion);
+            historyFileService.saveHistoryFile(newHistoryChecked);
             //更新审核状态
             Check check = checkOptional.get();
             check.setCollegeCheck(collegeCheck);

@@ -25,7 +25,7 @@ public class SysFile {
     @Column(name = "size")
     private Long size;
 
-    @Column(name = "url")
+    @Column(name = "url" , columnDefinition = "TEXT")
     @JsonIgnore
     private String url;
 

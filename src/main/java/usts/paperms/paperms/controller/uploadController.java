@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+
+import usts.paperms.paperms.common.MinIoUtil;
+import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.security.PasswordEncryptionService;
 import usts.paperms.paperms.service.LogSaveService;
@@ -57,6 +60,8 @@ public class uploadController {
     private TimeService timeService;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    MinIoProperties minIoProperties;
 
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("username") String username,
@@ -107,13 +112,14 @@ public class uploadController {
             }
             File encryptedFiles = rsaFileEncryptionService.encryptFile(files,filename);
             // 将文件复制到目标位置
-            Path targetLocation = Paths.get(UPLOAD_DIR).resolve(filename);
-            Files.copy(encryptedFiles.toPath(), targetLocation);
+            MinIoUtil.upload(minIoProperties.getBucketName(), filename,encryptedFiles);
+
+
             SysFile sysFile = new SysFile();
             sysFile.setName(filename);
             sysFile.setType(encryptedFile.getContentType());
             sysFile.setSize(encryptedFile.getSize());
-            sysFile.setUrl(targetLocation.toString());
+            sysFile.setUrl(filename);
             sysFile.setMd5(md5Checksum);
             sysFile.setProduced(username);
             sysFile.setDecrypt(false);
