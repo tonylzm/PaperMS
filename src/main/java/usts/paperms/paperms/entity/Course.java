@@ -13,9 +13,9 @@ public class Course {
     private String course_id;
 
     @Column(name = "course_name")
-    private String course_name;
+    private String courseName;
 
     @Column(name = "course_teacher")
-    private String course_teacher;
+    private String courseTeacher;
 
 }

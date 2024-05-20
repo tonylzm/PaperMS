@@ -11,8 +11,11 @@ import usts.paperms.paperms.entity.Course;
 public interface CourseRespository extends JpaRepository<Course, String> {
 
 
-    Course findBYCourseName(String courseName);
     @Modifying
     @Query(value = "UPDATE `sys_course` c SET c.`course_teacher` = null", nativeQuery = true)
     void resetAllCourseTeachers();
+
+    //通过课程名称查找课程
+    Course findByCourseName(String courseName);
+
 }

@@ -27,7 +27,7 @@ public class CourseService {
     // 更新课程教师
     public String updateCourse(String Id,String teacher){
         Course course = courseRespository.findById(Id).get();
-        course.setCourse_teacher(teacher);
+        course.setCourseTeacher(teacher);
         courseRespository.save(course);
         return "success";
     }
@@ -43,8 +43,8 @@ public class CourseService {
     public String addCourse(String course_id,String course_name,String course_teacher){
         Course course = new Course();
         course.setCourse_id(course_id);
-        course.setCourse_name(course_name);
-        course.setCourse_teacher(course_teacher);
+        course.setCourseName(course_name);
+        course.setCourseTeacher(course_teacher);
         courseRespository.save(course);
         return "success";
     }
@@ -63,7 +63,7 @@ public class CourseService {
                 Course course = new Course();
                 // 设置Course的属性
                 course.setCourse_id(row.getCell(0).getStringCellValue());
-                course.setCourse_name(row.getCell(1).getStringCellValue());
+                course.setCourseName(row.getCell(1).getStringCellValue());
                 // 保存Course对象到数据库
                 courseRespository.save(course);
             }
@@ -87,12 +87,12 @@ public class CourseService {
 
     //查询课程，通过课程名
     public Course findCourseByName(String course_name) {
-        return courseRespository.findBYCourseName(course_name);
+        return courseRespository.findByCourseName(course_name);
     }
 
     //删除课程,通过课程名
     public String deleteCourseByName(String course_name){
-        Course course = courseRespository.findBYCourseName(course_name);
+        Course course = courseRespository.findByCourseName(course_name);
         courseRespository.deleteById(course.getCourse_id());
         return "success";
     }
