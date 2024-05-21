@@ -31,13 +31,10 @@ import java.security.NoSuchAlgorithmException;
 public class downloadController {
     @Autowired
     private SysFileService sysFileService;
-
     @Autowired
     private MinIoProperties minIoProperties;
-
     // 创建一个 Resource 对象来包装错误消息
     Resource errorResource = new ByteArrayResource("下载错误".getBytes());
-
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam("filename") String fileName) {
         // 解码文件名
@@ -48,14 +45,12 @@ public class downloadController {
             // 如果解码失败，则直接使用原始文件名
             decodedFileName = fileName;
         }
-
         // 查询数据库中的MD5值
         String expectedMD5 = sysFileService.findMD5ByFileName(decodedFileName);
         if (expectedMD5 == null) {
             // 如果文件名不存在于数据库中，返回404 Not Found
             return ResponseEntity.notFound().build();
         }
-
         try {
             // 从 MinIO 下载文件并计算实际MD5值
             InputStream fileStream = MinIoUtil.getFileStream(minIoProperties.getBucketName(), decodedFileName);

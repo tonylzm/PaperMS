@@ -13,6 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.Repository.CourseRespository;
 import usts.paperms.paperms.entity.Course;
 
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class CourseService {
     @Autowired
@@ -88,6 +91,19 @@ public class CourseService {
     //查询课程，通过课程名
     public Course findCourseByName(String course_name) {
         return courseRespository.findByCourseName(course_name);
+    }
+
+    //通过教师名查询课程，返回一个Map表，表中包含所有教师名为course_teacher的课程名称和课程id
+    public Map<String, List<String>> findCourseByTeacher(String course_teacher) {
+        List<Course> courses = courseRespository.findByCourseTeacher(course_teacher);
+        List<String> courses_id = courses.stream()
+                .map(Course::getCourse_id)
+                .toList();
+        List<String> courses_name = courses.stream()
+                .map(Course::getCourseName)
+                .toList();
+        Map<String, List<String>> result = Map.of("courses_id", courses_id, "courses_name", courses_name);
+        return result;
     }
 
     //删除课程,通过课程名

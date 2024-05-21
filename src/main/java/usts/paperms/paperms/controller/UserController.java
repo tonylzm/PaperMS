@@ -172,8 +172,6 @@ public class UserController {
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(url, String.class);
         // 解析响应并输出地址信息
-        // 这里需要根据百度地图API的返回结果进行解析，具体实现需要根据返回的 JSON 结果进行处理
-        // 省略了解析过程，你需要根据实际情况解析响应并提取地址信息
         // 解析JSON响应
         JSONObject jsonResponse = new JSONObject(response);
         JSONObject content = jsonResponse.getJSONObject("content");
@@ -186,9 +184,6 @@ public class UserController {
         String plaintextAddress = country + " " + province + " " + city;
         return ResponseEntity.ok(plaintextAddress);
     }
-
-
-
 
     //输出用户某些基本信息
     @PostMapping("/findsalt")
@@ -222,8 +217,6 @@ public class UserController {
         return ResponseEntity.ok("User deleted successfully");
     }
 
-
-
     //登录方法实现
     @PostMapping("/login")
     public Result<?> login(@RequestBody LoginRequest loginRequest) {
@@ -245,8 +238,6 @@ public class UserController {
         return Result.ok("Login successful").body(jsonObject);
     }
 
-
-
     @Setter
     @Getter
     public static class CreateUserWithRoleRequest {
@@ -254,7 +245,6 @@ public class UserController {
         private String password;
         // 省略getter和setter方法
     }
-
     //密钥生成方法
     @GetMapping("/generate")
     public String generateKeys() {
@@ -290,19 +280,15 @@ public class UserController {
                                ) {
         List<Users> users_class = userService.findUsersByUser("check", college);
         List<Users> users_college = userService.findUsersByUser("college", college);
-
         List<String> realNames = users_class.stream()
                 .map(Users::getRealName)
                 .toList();
-
         List<String> realName = users_college.stream()
                 .map(Users::getRealName)
                 .toList();
-
         Map<String, List<String>> result = new HashMap<>();
         result.put("class_check", realNames);
         result.put("college_check", realName);
-
         return Result.success(result);
     }
 

@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.service.CourseService;
-import usts.paperms.paperms.service.LogSaveService;
 
 @RestController
 @RequestMapping("/api/course")
@@ -26,6 +25,11 @@ public class CourseController {
     @GetMapping("/find_name")
     public Result findCourseName(@RequestParam("course_name") String course_name){
         return Result.success(courseService.findCourseByName(course_name));
+    }
+    //查找教师所教课程
+    @GetMapping("/find_teacher")
+    public Result findTeacherCourse(@RequestParam("teacher") String teacher){
+        return Result.success(courseService.findCourseByTeacher(teacher));
     }
     //更新课程教师
     @PostMapping("/update_teacher")
