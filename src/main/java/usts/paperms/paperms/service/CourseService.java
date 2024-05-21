@@ -96,4 +96,10 @@ public class CourseService {
         courseRespository.deleteById(course.getCourse_id());
         return "success";
     }
+
+    //删除所有课程
+    public String deleteAllCourse(){
+        courseRespository.deleteAll();
+        return "success";
+    }
 }

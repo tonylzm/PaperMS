@@ -36,7 +36,7 @@ public class MinIoUtil {
      *
      * @param :
      * @return: void
-     * @date : 2020/8/16 20:56
+     * @date : 2024/5/20
      */
     @PostConstruct
     public void init() {
@@ -56,7 +56,7 @@ public class MinIoUtil {
      * @param bucketName:
      *            桶名
      * @return: boolean
-     * @date : 2020/8/16 20:53
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static boolean bucketExists(String bucketName) {
@@ -69,7 +69,7 @@ public class MinIoUtil {
      * @param bucketName:
      *            桶名
      * @return: void
-     * @date : 2020/8/16 20:53
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static void createBucket(String bucketName) {
@@ -84,7 +84,7 @@ public class MinIoUtil {
      *
      * @param :
      * @return: java.util.List<io.minio.messages.Bucket>
-     * @date : 2020/8/16 23:28
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static List<Bucket> getAllBuckets() {
@@ -101,7 +101,7 @@ public class MinIoUtil {
      * @param filePath:
      *            文件路径
      * @return: void
-     * @date : 2020/8/16 20:53
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static void upload(String bucketName, String fileName, String filePath) {
@@ -118,7 +118,7 @@ public class MinIoUtil {
      * @param stream:
      *            文件流
      * @return: java.lang.String : 文件url地址
-     * @date : 2020/8/16 23:40
+     * @date :2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static String upload(String bucketName, String fileName, InputStream stream) {
@@ -142,7 +142,7 @@ public class MinIoUtil {
      * @param file:
      *            文件
      * @return: java.lang.String : 文件url地址
-     * @date : 2020/8/16 23:40
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static String upload(String bucketName, MultipartFile file,String fileName) {
@@ -152,8 +152,6 @@ public class MinIoUtil {
         return getFileUrl(bucketName, fileName);
     }
 
-
-
     /**
      * 删除文件
      *
@@ -162,7 +160,7 @@ public class MinIoUtil {
      * @param fileName:
      *            文件名
      * @return: void
-     * @date : 2020/8/16 20:53
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static void deleteFile(String bucketName, String fileName) {
@@ -178,7 +176,7 @@ public class MinIoUtil {
      *            文件名
      * @param response:
      * @return: void
-     * @date : 2020/8/17 0:34
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static void download(String bucketName, String fileName, HttpServletResponse response) {
@@ -200,7 +198,7 @@ public class MinIoUtil {
      * @param fileName:
      *            文件名
      * @return: java.lang.String
-     * @date : 2020/8/16 22:07
+     * @date : 2024/5/20
      */
     @SneakyThrows(Exception.class)
     public static String getFileUrl(String bucketName, String fileName) {
@@ -214,13 +212,11 @@ public class MinIoUtil {
         return minioClient.getObject(bucketName, fileName);
     }
 
-
     @SneakyThrows(Exception.class)
     public static File getFile(String bucketName, String fileName) {
         InputStream is = minioClient.getObject(bucketName, fileName);
         return convertInputStreamToFile(is, fileName);
     }
-
 
     @SneakyThrows(Exception.class)
     public static File convertInputStreamToFile(InputStream inputStream, String fileName) throws IOException {
