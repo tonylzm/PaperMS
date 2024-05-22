@@ -292,5 +292,10 @@ public class UserController {
         return Result.success(result);
     }
 
+    @GetMapping("/get_teacher")
+    public Result getTeacher(){
+        return Result.success(userService.findRealNameByUsername());
+    }
+
 }
 

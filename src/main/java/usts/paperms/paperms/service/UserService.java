@@ -16,7 +16,9 @@ import usts.paperms.paperms.entity.*;
 import usts.paperms.paperms.security.PasswordEncryptionService;
 import usts.paperms.paperms.service.SecurityService.RSAKeyGenerationService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -280,5 +282,17 @@ public class UserService {
         createUserWithRoleAndSalt(user, role, salt,publicKey,privateKey);
         logSaveService.saveLog("用户"+request.getUsername()+"账号注册",actor);
         return "注册成功";
+    }
+
+    public Map<String,List<String>> findRealNameByUsername(){
+        List<Users> UsersInfo = userRepository.findAll();
+        List<String> realName = UsersInfo.stream()
+                .map(Users::getRealName)
+                .toList();
+        List<String> userName = UsersInfo.stream()
+                .map(Users::getUsername)
+                .toList();
+        Map<String,List<String>> map = Map.of("realName",realName,"userName",userName);
+        return map;
     }
 }
