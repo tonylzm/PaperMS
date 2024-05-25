@@ -15,6 +15,7 @@ import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.DecryptFileService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
@@ -63,6 +64,7 @@ public class uploadController {
     @Autowired
     MinIoProperties minIoProperties;
 
+    @ValidateToken
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("username") String username,
                                                    @RequestParam("from") String from,
@@ -136,6 +138,7 @@ public class uploadController {
         }
     }
 
+    @ValidateToken
     @GetMapping("/public")
     public ResponseEntity<String> getPublicKey() {
         try {
@@ -153,6 +156,7 @@ public class uploadController {
         }
     }
 
+    @ValidateToken
     @GetMapping("/private")
     public ResponseEntity<String> getPrivateKey() {
         try {

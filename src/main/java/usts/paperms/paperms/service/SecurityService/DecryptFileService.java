@@ -95,10 +95,8 @@ public class DecryptFileService {
     public String decryptAesKeyToString(String encryptedAesKeyBase64) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
         byte[] encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
         byte[] decryptedAesKeyBytes = cipher.doFinal(encryptedAesKey);
-
         // 将解密后的字节数组转换为字符串
         return new String(decryptedAesKeyBytes, "UTF-8");
     }

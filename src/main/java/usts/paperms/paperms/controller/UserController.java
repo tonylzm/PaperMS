@@ -18,12 +18,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import usts.paperms.paperms.common.JwtTokenUtil;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.LoginRequest;
 import usts.paperms.paperms.entity.User;
 import usts.paperms.paperms.entity.UserRole;
 import usts.paperms.paperms.entity.Users;
 import usts.paperms.paperms.security.PasswordEncryptionService;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.AESKeyGenerationService;
 import usts.paperms.paperms.service.SecurityService.JsonConverter;
@@ -35,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -52,6 +55,8 @@ public class UserController {
     private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private final String BAIDU_MAP_API_KEY = "RY1MJlgS9FiUEQFzZPdtCRpe538IduzF";
     @PostMapping("/create")
@@ -72,6 +77,7 @@ public class UserController {
     }
 
     //出卷人注册方法
+    @ValidateToken
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestParam("actor")String actor,
                                       @RequestBody Users request) throws Exception {
@@ -79,12 +85,14 @@ public class UserController {
     }
 
     //审批人(系)注册方法
+    @ValidateToken
     @PostMapping("/check_register")
     public ResponseEntity<?> check_register(@RequestParam("actor")String actor,
                                             @RequestBody Users request) throws Exception {
         return ResponseEntity.ok(userService.register(request,"check",actor));
     }
     //院长注册方法
+    @ValidateToken
     @PostMapping("/college_register")
     public ResponseEntity<?> college_register(@RequestParam("actor")String actor,
                                               @RequestBody Users request) throws Exception {
@@ -92,6 +100,7 @@ public class UserController {
     }
 
     //角色权限变化方法
+    @ValidateToken
     @PostMapping("/role")
     public ResponseEntity<?> changeRole(@RequestParam("Actor")String Actor,
                                         @RequestParam("username") String username,
@@ -100,6 +109,7 @@ public class UserController {
     }
 
     //查找相应权限的用户
+    @ValidateToken
     @PostMapping("/userrole")
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
@@ -117,57 +127,34 @@ public class UserController {
         String time = (String) data.get("time");
         String ipAddress = (String) data.get("ipAddress");
         String hashedPassword = (String) data.get("hashedPassword");
-
-
         String url = "http://api.map.baidu.com/location/ip?ak=" + BAIDU_MAP_API_KEY + "&ip=" + ipAddress;
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(url, String.class);
-
         // 解析响应并输出地址信息
         // 这里需要根据百度地图API的返回结果进行解析，具体实现需要根据返回的 JSON 结果进行处理
-        // 省略了解析过程，你需要根据实际情况解析响应并提取地址信息
-        // 解析JSON响应
         JSONObject jsonResponse = new JSONObject(response);
         JSONObject content = jsonResponse.getJSONObject("content");
         JSONObject addressDetail = content.getJSONObject("address_detail");
-
         // 提取国家、省份和城市信息
         String country = "中国"; // 默认为中国，因为百度地图API返回的是国内IP地址
         String province = addressDetail.getStr("province");
         String city = addressDetail.getStr("city");
-
         //如果country不在江苏省，返回错误信息
         if(!province.equals("江苏省") && !city.equals("苏州市")){
             return ResponseEntity.badRequest().body("非法访问");
         }
-
         redisTemplate.opsForValue().set("username:" + username, username, Duration.ofSeconds(120));
         redisTemplate.opsForValue().set("time:" + username, time, Duration.ofSeconds(120));
         redisTemplate.opsForValue().set("ipAddress:" + username, ipAddress, Duration.ofSeconds(120));
         redisTemplate.opsForValue().set("hashedPassword:" + username, hashedPassword, Duration.ofSeconds(120));
         return ResponseEntity.ok("认证信息生成完成");
     }
+
+    //获取公钥
     @GetMapping("/getPublicKey/{username}")
     public ResponseEntity<?> getPublicKey(@PathVariable String username) {
         // 从 Redis 中读取公钥
         String ipAddress= redisTemplate.opsForValue().get("ipAddress:" + username);
-//        // 解析IP地址的地理位置
-//        String country = "Unknown";
-//        String city = "Unknown";
-//
-//        if (ipAddress != null) {
-//            try {
-//                File database = new File("src/main/resources/static/files/city/GeoLite2-City.mmdb");
-//                DatabaseReader reader = new DatabaseReader.Builder(database).build();
-//                InetAddress ip = InetAddress.getByName(ipAddress);
-//                CityResponse response = reader.city(ip);
-//
-//                country = response.getCountry().getName();
-//                city = response.getCity().getName();
-//            } catch (IOException | GeoIp2Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
         String url = "http://api.map.baidu.com/location/ip?ak=" + BAIDU_MAP_API_KEY + "&ip=" + ipAddress;
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(url, String.class);
@@ -184,27 +171,30 @@ public class UserController {
         String plaintextAddress = country + " " + province + " " + city;
         return ResponseEntity.ok(plaintextAddress);
     }
-
     //输出用户某些基本信息
+    @ValidateToken
     @PostMapping("/findsalt")
     public ResponseEntity<?> findSaltByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findSaltByUsername(request.getUsername()));
     }
 
+    @ValidateToken
     @PostMapping("/findrole")
     public ResponseEntity<?> findRoleByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findUserByUsername(request.getUsername()));
     }
 
+    @ValidateToken
     @PostMapping("/find_public_key")
     public ResponseEntity<?> findKeyByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findPublicKeyByUsername(request.getUsername()));
     }
+    @ValidateToken
     @PostMapping("/find_private_key")
     public ResponseEntity<?> findPrivateKeyByUsername(@RequestBody Users request) {
         return ResponseEntity.ok(userService.findPrivateKeyByUsername(request.getUsername()));
     }
-
+    @ValidateToken
     @PostMapping("/delete")
     public ResponseEntity<?> deleteUser(@RequestParam("actor")String actor,
                                         @RequestBody Users request) {
@@ -224,6 +214,9 @@ public class UserController {
         if (user == null || !user.getPassword().equals(passwordEncryption.encryptPassword(loginRequest.getPassword(),userService.findSaltByUsername(loginRequest.getUsername()).get()))) {
             return Result.fail("Invalid username or password");
         }
+        String token = jwtTokenUtil.generateToken(loginRequest.getUsername());
+        // 将 token 存储在 Redis 中，设置过期时间
+        redisTemplate.opsForValue().set(loginRequest.getUsername(), token, jwtTokenUtil. getExpirationInSeconds(), TimeUnit.SECONDS);
         // 登录成功，返回角色权限信息和登录成功信息
         Map<String, Object> data = JsonConverter.createMap();
         data.put("role", userService.findRoleByUsername(loginRequest.getUsername()).get());
@@ -232,10 +225,17 @@ public class UserController {
         data.put("college", user.getCollege());
         data.put("tel", user.getTel());
         data.put("email", user.getEmail());
+        data.put("token", token);
         String json = JsonConverter.convertToJson(data);
         JSONObject jsonObject = new JSONObject(json);
         logSaveService.saveLog("用户进行登录",user.getRealName());
         return Result.ok("Login successful").body(jsonObject);
+    }
+
+    @ValidateToken
+    @PostMapping("/token")
+    public ResponseEntity<?> validateToken() {
+        return ResponseEntity.ok("Token is valid");
     }
 
     @Setter
@@ -246,6 +246,7 @@ public class UserController {
         // 省略getter和setter方法
     }
     //密钥生成方法
+
     @GetMapping("/generate")
     public String generateKeys() {
         try {
@@ -258,6 +259,7 @@ public class UserController {
         }
     }
     //修改密码
+    @ValidateToken
     @PostMapping("/updatePassword")
     public ResponseEntity<?> updatePassword(@RequestBody Map<String, Object> data) {
         String username = (String) data.get("username");
@@ -267,6 +269,7 @@ public class UserController {
     }
 
     //修改密码2
+    @ValidateToken
     @PostMapping("/updatePassword2")
     public ResponseEntity<?> updatePassword2(@RequestBody Map<String, Object> data) {
         String username = (String) data.get("username");
@@ -275,6 +278,7 @@ public class UserController {
     }
 
     //查找角色为审批人的用户
+    @ValidateToken
     @PostMapping("/findCheckUser")
     public Result findCheckUser(@RequestParam("college")String college
                                ) {
@@ -292,6 +296,7 @@ public class UserController {
         return Result.success(result);
     }
 
+    @ValidateToken
     @GetMapping("/get_teacher")
     public Result getTeacher(){
         return Result.success(userService.findRealNameByUsername());

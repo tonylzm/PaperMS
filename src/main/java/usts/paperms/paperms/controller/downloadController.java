@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.core.io.InputStreamResource;
 import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.config.MinIoProperties;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.SysFileService;
 
 import java.io.IOException;
@@ -35,6 +36,7 @@ public class downloadController {
     private MinIoProperties minIoProperties;
     // 创建一个 Resource 对象来包装错误消息
     Resource errorResource = new ByteArrayResource("下载错误".getBytes());
+    @ValidateToken
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam("filename") String fileName) {
         // 解码文件名

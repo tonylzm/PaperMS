@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usts.paperms.paperms.common.JwtTokenUtil;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.User;
 import usts.paperms.paperms.entity.Users;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.JsonConverter;
 import usts.paperms.paperms.service.UserService;
@@ -16,6 +18,7 @@ import usts.paperms.paperms.service.EmailService;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/email")
@@ -29,6 +32,8 @@ public class EmailController{
     private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     @GetMapping("/register")
     public Result sendCode(String to) throws MessagingException {
@@ -58,6 +63,7 @@ public class EmailController{
         return "验证码错误";
     }
 
+    @ValidateToken
     @PostMapping("/change_email")
     public String changeEmail(@RequestParam("email") String email,
                               @RequestParam("username")String username) {
@@ -79,6 +85,10 @@ public class EmailController{
         }
         if (code.equals(randomCode)) {
             Users user = userService.findUserByEmail(email);
+            String token = jwtTokenUtil.generateToken(user.getUsername());
+            // 将 token 存储在 Redis 中，设置过期时间
+            redisTemplate.opsForValue().set(user.getUsername(), token, jwtTokenUtil. getExpirationInSeconds(), TimeUnit.SECONDS);
+            // 登录成功，返回角色权限信息和登录成功信息
             Map<String, Object> data = JsonConverter.createMap();
             data.put("role", userService.findRoleByUsername(user.getUsername()).get());
             data.put("username", user.getUsername());
@@ -86,6 +96,7 @@ public class EmailController{
             data.put("college", user.getCollege());
             data.put("tel", user.getTel());
             data.put("email", user.getEmail());
+            data.put("token", token);
             String json = JsonConverter.convertToJson(data);
             JSONObject jsonObject = new JSONObject(json);
             logSaveService.saveLog("用户进行登录", user.getUsername());

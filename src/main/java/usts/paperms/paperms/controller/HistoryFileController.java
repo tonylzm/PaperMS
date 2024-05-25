@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.historychecked;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.HistoryFileService;
 
 @RestController
@@ -18,6 +19,7 @@ public class HistoryFileController {
     private HistoryFileService historyFileService;
 
     //返回分页查找的历史文件
+    @ValidateToken
     @PostMapping("/findHistoryfile")
     public ResponseEntity<Page> findHistoryfile(@RequestParam Integer pageNum,
                                           @RequestParam Integer pageSize,

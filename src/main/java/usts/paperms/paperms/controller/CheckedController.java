@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SysFileService;
 
@@ -22,6 +23,7 @@ public class CheckedController {
     private LogSaveService logSaveService;
 
     //系主任审核
+    @ValidateToken
     @PostMapping("/classChecked")
     public ResponseEntity<String> classChecked(@RequestParam("fileName") String filename,
                                                @RequestParam("classCheck") String classCheck,
@@ -33,6 +35,7 @@ public class CheckedController {
         return ResponseEntity.ok("Class check successful");
     }
     //院长审核
+    @ValidateToken
     @PostMapping("/collegeChecked")
     public ResponseEntity<String> collegeChecked(@RequestParam("fileName") String filename,
                                                  @RequestParam("collegeCheck") String collegeCheck,
@@ -45,6 +48,7 @@ public class CheckedController {
     }
 
     //返回需要审核的文件(已经弃用）
+    @ValidateToken
     @PostMapping("/findCheckedfile")
     public Result findCheckedfile(@RequestParam Integer pageNum,
                                   @RequestParam Integer pageSize,
@@ -57,6 +61,7 @@ public class CheckedController {
     }
 
     //返回文件(已经弃用）
+    @ValidateToken
     @PostMapping("/findFile")
     public Result findFile(@RequestParam Integer pageNum,
                            @RequestParam Integer pageSize,
@@ -67,6 +72,7 @@ public class CheckedController {
     }
 
     //返回class_check对应需要审核的文件
+    @ValidateToken
     @PostMapping("/findClassCheckFile")
     public Result findClassCheckFile(@RequestParam Integer pageNum,
                                      @RequestParam Integer pageSize,
@@ -79,6 +85,7 @@ public class CheckedController {
         return Result.success(page);
     }
     //返回college_check对应需要审核的文件
+    @ValidateToken
     @PostMapping("/findCollegeCheckFile")
     public Result findCollegeCheckFile(@RequestParam Integer pageNum,
                                      @RequestParam Integer pageSize,

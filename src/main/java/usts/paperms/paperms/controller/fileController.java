@@ -18,6 +18,7 @@ import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
 import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
@@ -44,6 +45,7 @@ public class fileController {
     @Autowired
     MinIoProperties minIoProperties;
 
+    @ValidateToken
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public  Result findPage(@RequestParam Integer pageNum,
@@ -55,6 +57,7 @@ public class fileController {
         return Result.success(page);
     }
     //将文件按照学院信息进行分页输出
+    @ValidateToken
     @GetMapping(value = "/pageByCollege", produces = MediaType.APPLICATION_JSON_VALUE)
     public  Result findPageByCollege(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
@@ -65,6 +68,7 @@ public class fileController {
         return Result.success(page);
     }
 
+    @ValidateToken
     @GetMapping(value = "/pageByProduced", produces = MediaType.APPLICATION_JSON_VALUE)
     public  Result findPageByProduced(@RequestParam Integer pageNum,
                             @RequestParam Integer pageSize,
@@ -75,6 +79,7 @@ public class fileController {
         // 构造返回结果
         return Result.success(page);
     }
+    @ValidateToken
     @GetMapping(value = "/opinion", produces = MediaType.APPLICATION_JSON_VALUE)
     public  Result findopinion(@RequestParam Integer pageNum,
                                       @RequestParam Integer pageSize,
@@ -86,6 +91,7 @@ public class fileController {
         return Result.success(page);
     }
     //文件预览方法
+    @ValidateToken
     @GetMapping("/preview")
     public ResponseEntity<byte[]> previewDocument(@RequestParam("fileName") String fileName,
                                                   @RequestParam("Actor") String Actor){
@@ -105,6 +111,7 @@ public class fileController {
         }
     }
     //文件解密方法
+    @ValidateToken
     @PostMapping("/decrypt")
     public ResponseEntity<String> decryptDocument(@RequestParam("fileName") String fileName,
                                                   @RequestParam("Actor") String Actor){
@@ -125,6 +132,7 @@ public class fileController {
     }
 
     //查询文件审核状态
+    @ValidateToken
     @PostMapping("/check")
     public ResponseEntity<String> checkDocument(@RequestParam("fileName") String fileName) {
         // 调用 SysFileService 的方法查询文件审核状态
