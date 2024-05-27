@@ -18,19 +18,24 @@ import usts.paperms.paperms.common.JwtTokenUtil;
 public class TokenValidationAspect {
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Autowired
-    private JwtTokenUtil JwtTokenUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     @Before("@annotation(ValidateToken)")
     public void validateToken() throws IOException {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
         HttpServletResponse response = attributes.getResponse();
+        // 如果是OPTIONS请求，直接返回
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return;
+        }
+        // 获取令牌并进行验证
         String token = request.getHeader("Authorization");
-        if (!JwtTokenUtil.isValidToken(token)) {
+        if (!jwtTokenUtil.isValidToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or missing token");
+            throw new InvalidTokenException("Invalid or missing token"); // 抛出自定义异常
         }
     }
 }
+
 
