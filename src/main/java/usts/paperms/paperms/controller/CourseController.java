@@ -15,8 +15,9 @@ public class CourseController {
     //查询所有课程
     @ValidateToken
     @GetMapping("/all_page")
-    public Result allCourse(int pageNum, int pageSize) {
-        return Result.success(courseService.findAll(pageNum, pageSize));
+    public Result allCourse(int pageNum, int pageSize ,
+                            @RequestParam(defaultValue = "") String name) {
+        return Result.success(courseService.findAll(pageNum, pageSize,name));
     }
     //查询课程，id
     @ValidateToken

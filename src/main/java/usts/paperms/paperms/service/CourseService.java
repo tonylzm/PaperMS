@@ -22,9 +22,9 @@ public class CourseService {
     private CourseRespository courseRespository;
 
     // 分页查询所有课程
-    public Page<Course> findAll(int pageNum, int pageSize) {
+    public Page<Course> findAll(int pageNum, int pageSize, String courseName) {
         Pageable pageable = PageRequest.of(pageNum, pageSize);
-        return courseRespository.findAll(pageable);
+        return courseRespository.findByCourseNameContaining(courseName, pageable);
     }
 
     // 更新课程教师
