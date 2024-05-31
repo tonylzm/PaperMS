@@ -18,4 +18,7 @@ public class Course {
     @Column(name = "course_teacher")
     private String courseTeacher;
 
+    @Column(name = "course_college")
+    private String courseCollege;
+
 }

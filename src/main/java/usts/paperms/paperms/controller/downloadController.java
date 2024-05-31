@@ -15,6 +15,8 @@ import org.springframework.core.io.InputStreamResource;
 import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.security.ValidateToken;
+import usts.paperms.paperms.service.LogSaveService;
+import usts.paperms.paperms.service.SecurityService.RSAFileEncryptionService;
 import usts.paperms.paperms.service.SysFileService;
 
 import java.io.IOException;
@@ -26,6 +28,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/download")
@@ -34,8 +37,15 @@ public class downloadController {
     private SysFileService sysFileService;
     @Autowired
     private MinIoProperties minIoProperties;
+    @Autowired
+    private RSAFileEncryptionService rsaFileEncryptionService;
+    @Autowired
+    private LogSaveService logSaveService;
     // 创建一个 Resource 对象来包装错误消息
     Resource errorResource = new ByteArrayResource("下载错误".getBytes());
+    @Autowired
+    private usts.paperms.paperms.service.pigeonholeService pigeonholeService;
+
     @ValidateToken
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam("filename") String fileName) {
@@ -68,6 +78,51 @@ public class downloadController {
                 headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
                 headers.setContentDispositionFormData("attachment", getEncodedFilename(decodedFileName));
 
+                logSaveService.saveLog("教务主管解密并下载了文件：" + decodedFileName, "教务主管");
+                // 返回包含文件内容的响应实体
+                return ResponseEntity.ok()
+                        .headers(headers)
+                        .body(resource);
+            } else {
+                // 如果MD5值不匹配，返回错误响应
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResource);
+            }
+        } catch (IOException | NoSuchAlgorithmException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    //归档下载
+    @ValidateToken
+    @GetMapping("/pigeonholeDownload")
+    public ResponseEntity<Resource> pigeonholeDownload(@RequestParam("filename") String fileName) throws Exception {
+        rsaFileEncryptionService.pigeonholeDecrypt(fileName);
+        String decodedFileName;
+        try {
+            decodedFileName = URLDecoder.decode(fileName, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // 如果解码失败，则直接使用原始文件名
+            decodedFileName = fileName;
+        }
+        // 查询数据库中的MD5值
+        String expectedMD5 = pigeonholeService.findMD5ByFileName(decodedFileName);
+        if (expectedMD5 == null) {
+            // 如果文件名不存在于数据库中，返回404 Not Found
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            // 从 MinIO 下载文件并计算实际MD5值
+            InputStream fileStream = MinIoUtil.getFileStream("pigeonhole", decodedFileName);
+            String actualMD5 = calculateMD5(fileStream);
+            // 检查MD5值是否匹配
+            if (expectedMD5.equals(actualMD5)) {
+                // 重置 InputStream 以重新读取文件内容
+                fileStream = MinIoUtil.getFileStream("pigeonhole", decodedFileName);
+                Resource resource = new InputStreamResource(fileStream);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                headers.setContentDispositionFormData("attachment", getEncodedFilename(decodedFileName));
                 // 返回包含文件内容的响应实体
                 return ResponseEntity.ok()
                         .headers(headers)

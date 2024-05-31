@@ -51,23 +51,9 @@ public class RSAFileEncryptionService {
     private PublicKey publicKey;
     @Autowired
     private MinIoUtil minIoUtil;
+    @Autowired
+    private usts.paperms.paperms.service.pigeonholeService pigeonholeService;
 
-    //    public RSAFileEncryptionService() {
-//        // Constructor remains empty
-//        //将字符串转换为公钥和私钥
-//        try {
-//            byte[] publicBytes = Base64.getDecoder().decode(publicKeyStr);
-//            byte[] privateBytes = Base64.getDecoder().decode(privateKeyStr);
-//            X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(publicBytes);
-//            PKCS8EncodedKeySpec privateSpec = new PKCS8EncodedKeySpec(privateBytes);
-//            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//            publicKey = keyFactory.generatePublic(publicSpec);
-//            privateKey = keyFactory.generatePrivate(privateSpec);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
     @PostConstruct
     public void init() throws Exception {
         this.publicKey = loadPublicKey(publicKeyStr);
@@ -96,25 +82,6 @@ public class RSAFileEncryptionService {
         return keyFactory.generatePrivate(keySpec);
     }
 
-//    private PrivateKey loadPrivateKey(String filePath) throws Exception {
-//        FileInputStream fis = new FileInputStream(filePath);
-//        byte[] keyBytes = new byte[fis.available()];
-//        fis.read(keyBytes);
-//        fis.close();
-//        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//        return keyFactory.generatePrivate(spec);
-//    }
-//
-//    private PublicKey loadPublicKey(String filePath) throws Exception {
-//        FileInputStream fis = new FileInputStream(filePath);
-//        byte[] keyBytes = new byte[fis.available()];
-//        fis.read(keyBytes);
-//        fis.close();
-//        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//        return keyFactory.generatePublic(spec);
-//    }
 
     // 加密文件（文件为MultipartFile类型）
     public String encryptFile(MultipartFile inputFile,String filename) throws Exception {
@@ -141,6 +108,31 @@ public class RSAFileEncryptionService {
         }
     }
 
+    //归档加密
+    public String pigeonhole(MultipartFile inputFile,String filename) throws Exception {
+        // 生成AES密钥
+        SecretKey aesKey = generateAESKey();
+        // 将AES密钥加密
+        byte[] encryptedAESKey = encryptAESKey(aesKey);
+        try(ByteArrayOutputStream byteArrayOutputStream1 = new ByteArrayOutputStream()) {
+            byteArrayOutputStream1.write(encryptedAESKey);
+            InputStream file = new ByteArrayInputStream(byteArrayOutputStream1.toByteArray());
+            MinIoUtil.upload("pigeonholekeys", filename + ".key", file);
+        }
+        // 加密文件内容
+        Cipher aesCipher = Cipher.getInstance("AES");
+        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+        try (InputStream fileInputStream = inputFile.getInputStream();
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            byte[] inputBytes = fileInputStream.readAllBytes();
+            byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
+            byteArrayOutputStream.write(encryptedBytes);
+            // 上传加密后的文件内容
+            InputStream encryptedFileInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            return MinIoUtil.upload("pigeonhole", filename,encryptedFileInputStream);
+        }
+    }
+
     //加密文件（文件为byte[]类型）
     public String encryptFiles(byte[] inputFile,String filename) throws Exception {
         // 生成AES密钥
@@ -155,14 +147,6 @@ public class RSAFileEncryptionService {
         // 加密文件内容
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-//        File encryptedFile = new File(filename);
-//        try (InputStream fileInputStream = new ByteArrayInputStream(inputFile);
-//             OutputStream fileOutputStream = new FileOutputStream(encryptedFile)) {
-//            byte[] inputBytes = fileInputStream.readAllBytes();
-//            byte[] encryptedBytes = aesCipher.doFinal(inputBytes);
-//            fileOutputStream.write(encryptedBytes);
-//        }
-//        return encryptedFile;
         try (InputStream fileInputStream = new ByteArrayInputStream(inputFile);
              ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             byte[] inputBytes = fileInputStream.readAllBytes();
@@ -174,23 +158,6 @@ public class RSAFileEncryptionService {
         }
     }
 
-//    public void decryptFile(File encryptedFile) throws Exception {
-//        // 从文件中读取加密的AES密钥
-//        File fileInputStreams = MinIoUtil.getFile("keys",encryptedFile.getName()+".key");
-//        byte [] fileContent = Files.readAllBytes(fileInputStreams.toPath());
-//        //minio读取加密的AES密钥
-//        // 使用RSA私钥解密AES密钥
-//        SecretKey aesKey = decryptAESKey(fileContent);
-//        // 解密文件内容并替换原加密文件
-//        Cipher aesCipher = Cipher.getInstance("AES");
-//        aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
-//        try (FileInputStream fileInputStream = new FileInputStream(encryptedFile)) {
-//            byte[] encryptedBytes = fileInputStream.readAllBytes();
-//            byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
-//            File file = convertByteArrayToFile(decryptedBytes, encryptedFile.getName());
-//            MinIoUtil.deleteFile("keys",encryptedFile.getName()+".key");
-//        }
-//    }
 
     // 解密文件的方法
     public String decryptFiles(String encryptedFileName) throws Exception {
@@ -214,6 +181,37 @@ public class RSAFileEncryptionService {
 
         // 删除存储的AES密钥文件
         MinIoUtil.deleteFile("keys", encryptedFileName + ".key");
+
+        return decryptedFileUrl;
+    }
+
+    //归档解密方法
+    public String pigeonholeDecrypt(String encryptedFileName) throws Exception {
+        if(pigeonholeService.findDecryptedByFileName(encryptedFileName)){
+            return "File already decrypted";
+        }
+        // 从MinIO下载加密的AES密钥
+        InputStream encryptedKeyStream = MinIoUtil.getFileStream("pigeonholekeys", encryptedFileName + ".key");
+        byte[] encryptedKeyBytes = encryptedKeyStream.readAllBytes();
+        SecretKey aesKey = decryptAESKey(encryptedKeyBytes);
+
+        // 从MinIO下载加密的文件内容
+        InputStream encryptedFileStream = MinIoUtil.getFileStream("pigeonhole",encryptedFileName);
+        byte[] encryptedFileBytes = encryptedFileStream.readAllBytes();
+
+        // 解密文件内容
+        Cipher aesCipher = Cipher.getInstance("AES");
+        aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
+        byte[] decryptedBytes = aesCipher.doFinal(encryptedFileBytes);
+
+        // 上传解密后的文件内容到MinIO
+        InputStream decryptedFileInputStream = new ByteArrayInputStream(decryptedBytes);
+        String decryptedFileUrl = MinIoUtil.upload("pigeonhole", encryptedFileName, decryptedFileInputStream);
+
+        // 删除存储的AES密钥文件
+        MinIoUtil.deleteFile("pigeonholekeys", encryptedFileName + ".key");
+
+        pigeonholeService.updateDecrypted(encryptedFileName, true);
 
         return decryptedFileUrl;
     }

@@ -48,7 +48,6 @@ public class LogService {
         logData.put("errorCount", errorCount);
         logData.put("allCount", allCount);
         logData.put("databaseCount", databaseCount);
-
         return logData;
     }
 }

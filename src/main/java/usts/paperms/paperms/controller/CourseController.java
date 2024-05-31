@@ -16,8 +16,9 @@ public class CourseController {
     @ValidateToken
     @GetMapping("/all_page")
     public Result allCourse(int pageNum, int pageSize ,
-                            @RequestParam(defaultValue = "") String name) {
-        return Result.success(courseService.findAll(pageNum, pageSize,name));
+                            @RequestParam(defaultValue = "") String name,
+                            @RequestParam("college") String college){
+        return Result.success(courseService.findAll(pageNum, pageSize,name,college));
     }
     //查询课程，id
     @ValidateToken
@@ -60,9 +61,10 @@ public class CourseController {
     //批量添加课程
     @ValidateToken
     @PostMapping("/add_more_course")
-    public Result addMoreCourse(@RequestParam("file") MultipartFile file) {
+    public Result addMoreCourse(@RequestParam("file") MultipartFile file,
+                                @RequestParam("college") String courseCollege){
         //检测文件是否为excel文件
-        return Result.success(courseService.addMoreCourse(file));
+        return Result.success(courseService.addMoreCourse(file,courseCollege));
     }
     //删除课程
     @ValidateToken
@@ -79,8 +81,8 @@ public class CourseController {
     //删除所有课程
     @ValidateToken
     @PostMapping("/delete_all")
-    public Result deleteAllCourse(){
-        return Result.success(courseService.deleteAllCourse());
+    public Result deleteAllCourse( @RequestParam("college") String courseCollege){
+        return Result.success(courseService.deleteAllCourse(courseCollege));
     }
 
 }

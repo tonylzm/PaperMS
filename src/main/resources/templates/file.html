@@ -1,177 +1,47 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spring Boot with Vue.js</title>
-    <!-- Import Element UI Styles -->
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <title>欢迎使用本系统</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
 </head>
 <body>
-<div th:replace="fragments/menu :: files-menu"></div>
-<div id="app">
-    <div>
-        <div style="margin: 10px 0">
-            <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search" v-model="name"></el-input>
-            <el-button class="ml-5" type="primary" @click=" loadData">搜索</el-button>
-            <el-button type="warning" @click="reset">重置</el-button>
+
+<div id="app" style="text-align:center;margin-top:50px;">
+    <el-card class="box-card" style="max-width:600px;margin:0 auto;">
+        <div slot="header" class="clearfix">
+            <span>欢迎使用本系统</span>
         </div>
-        <div style="margin: 10px 0">
-            <el-upload action="http://localhost:9090/api/upload/upload" :show-file-list="false"
-                       :on-success="handleFileUploadSuccess" style="display: inline-block">
-                <el-button type="primary" class="ml-5">上传文件 <i class="el-icon-top"></i></el-button>
-            </el-upload>
-            <el-popconfirm class="ml-5" confirm-button-text='确定' cancel-button-text='我再想想' icon="el-icon-info"
-                           icon-color="red" title="您确定批量删除这些数据吗？" @confirm="delBatch">
-                <el-button type="danger" slot="reference">批量删除 <i class="el-icon-remove-outline"></i></el-button>
-            </el-popconfirm>
-
+        <div>
+            <p>欢迎使用本系统！本系统是一款用于管理和监控的高效工具，旨在提升您的工作效率和管理能力。</p>
+            <p>如果您想访问主界面，请点击下面的链接：</p>
+            <el-button type="primary" @click="goToMain">访问主界面</el-button>
         </div>
-        <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'"
-                  @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column prop="id" label="ID" width="80"></el-table-column>
-            <el-table-column prop="name" label="文件名称"></el-table-column>
-            <el-table-column prop="type" label="文件类型"></el-table-column>
-            <el-table-column prop="size" label="文件大小(kb)"></el-table-column>
-            <el-table-column label="下载">
-                <template slot-scope="scope">
-                    <el-button type="primary" @click="download(scope.row.name)">下载</el-button>
-                </template>
-            </el-table-column>
-            <el-table-column label="启用">
-                <template slot-scope="scope">
-                    <el-switch v-model="scope.row.enable" active-color="#13ce66" inactive-color="#ccc"
-                               @change="changeEnable(scope.row)"></el-switch>
-                </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200" align="center">
-                <template slot-scope="scope">
-                    <el-popconfirm class="ml-5" confirm-button-text='确定' cancel-button-text='我再想想' icon="el-icon-info"
-                                   icon-color="red" title="您确定加密吗？" @confirm="del(scope.row.id)">
-                        <el-button type="danger" slot="reference">加密 <i class="el-icon-remove-outline"></i></el-button>
-                    </el-popconfirm>
-                </template>
-            </el-table-column>
-        </el-table>
-
-        <div style="padding: 10px 0">
-            <el-pagination @size-change="handleSizeChange" @current-change="handlePageChange"
-                           :current-page="pageNum" :page-sizes="[2, 5, 10, 20]" :page-size="pageSize"
-                           layout="total, sizes, prev, pager, next, jumper" :total="total">
-            </el-pagination>
-
-        </div>
-
-    </div>
+    </el-card>
 </div>
 
-<link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<div style="position:fixed;text-align:center;bottom:0;margin:0 auto;width:100%;color: #ffff">
+    <a target="_blank" style="color: #ffff" href="https://beian.miit.gov.cn/">湘ICP备2024065718号-1</a>
+    &nbsp; @2024-2025 Tonylin
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://unpkg.com/vue@2/dist/vue.js"></script>
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/qs/dist/qs.js"></script>
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 
-<!--
- Your custom scripts -->
 <script>
     new Vue({
         el: '#app',
-        data() {
-            return {
-                tableData: [],
-                name: '',
-                multipleSelection: [],
-                pageNum: 1,
-                pageSize: 10,
-                total: 0
-            }
-        },
-        created() {
-            this.loadData();
-        },
-
         methods: {
-            loadData(){
-            axios.get('/api/files/page', {
-                params: {
-                    pageNum: this.pageNum,
-                    pageSize: this.pageSize,
-                    name: this.name
-                }
-            }).then(response => {
-                // 从响应数据中获取分页信息和数据列表
-                const { content, totalPages, totalElements, number } = response.data.body;
-
-                // 将获取的数据填充到表格数据中
-                this.tableData = content;
-
-                // 更新分页相关信息
-                this.total = totalElements;
-                // 更新当前页码
-                this.pageNum = number + 1; // 因为后端的页码是从0开始的，所以在前端显示时加1
-            }).catch(error => {
-                console.error('Error loading data:', error);
-            });
-            },
-            // 分页变化时的处理方法
-            handlePageChange(pageNum) {
-                // 更新当前页码
-                this.pageNum = pageNum;
-                // 调用加载数据方法
-                this.loadData();
-            },
-            // 每页显示数量变化时的处理方法
-            handleSizeChange(pageSize) {
-                // 更新每页显示数量
-                this.pageSize = pageSize;
-                // 调用加载数据方法
-                this.loadData();
-            },
-            download(name) {
-                axios.get('/api/download/download', {
-                    params: {
-                        filename: name
-                    },
-                    responseType: 'blob' // 设置响应类型为二进制数据
-                })
-                    .then(response => {
-                        // 创建一个a标签
-                        const a = document.createElement('a');
-                        // 创建一个URL对象
-                        const url = window.URL.createObjectURL(response.data);
-
-                        // 设置a标签的href属性
-                        a.href = url;
-                        // 设置a标签的download属性
-                        a.download = name;
-
-                        // 将a标签添加到body中
-                        document.body.appendChild(a);
-                        // 模拟点击a标签
-                        a.click();
-
-                        // 移除a标签
-                        document.body.removeChild(a);
-                        // 释放URL对象
-                        window.URL.revokeObjectURL(url);
-                        // 提示下载成功
-                        this.$message.success('下载成功');
-                    })
-                    .catch(error => {
-                        console.error('Error downloading file:', error);
-                        // 提示下载失败
-                        this.$message.error('下载失败');
-                    });
+            goToMain() {
+                window.location.href = 'https://goto-moon.cn';
             }
-
-        },
+        }
     });
 </script>
-
 
 </body>
 </html>

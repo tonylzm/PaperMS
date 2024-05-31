@@ -22,9 +22,9 @@ public class CourseService {
     private CourseRespository courseRespository;
 
     // 分页查询所有课程
-    public Page<Course> findAll(int pageNum, int pageSize, String courseName) {
+    public Page<Course> findAll(int pageNum, int pageSize, String courseName, String courseCollege) {
         Pageable pageable = PageRequest.of(pageNum, pageSize);
-        return courseRespository.findByCourseNameContaining(courseName, pageable);
+        return courseRespository.findByCourseNameContainingAndCourseCollege(courseName,courseCollege, pageable);
     }
 
     // 更新课程教师
@@ -53,7 +53,7 @@ public class CourseService {
     }
 
     // 批量添加课程
-    public String addMoreCourse(MultipartFile file) {
+    public String addMoreCourse(MultipartFile file,String courseCollege){
         try {
             // 创建一个Workbook对象，这个对象代表了Excel文件
             Workbook workbook = new XSSFWorkbook(file.getInputStream());
@@ -67,6 +67,7 @@ public class CourseService {
                 // 设置Course的属性
                 course.setCourse_id(row.getCell(0).getStringCellValue());
                 course.setCourseName(row.getCell(1).getStringCellValue());
+                course.setCourseCollege(courseCollege);
                 // 保存Course对象到数据库
                 courseRespository.save(course);
             }
@@ -113,9 +114,10 @@ public class CourseService {
         return "success";
     }
 
+    @Transactional
     //删除所有课程
-    public String deleteAllCourse(){
-        courseRespository.deleteAll();
+    public String deleteAllCourse(String courseCollege){
+        courseRespository.deleteAllByCourseCollege(courseCollege);
         return "success";
     }
 }

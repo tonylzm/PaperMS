@@ -54,6 +54,9 @@ public class SysFile {
     @Column(name ="college")
     private String college;
 
+//    @Column(name = "is_pigeonhole")
+//    private boolean pigeonhole;
+
 
     @OneToOne(mappedBy = "sysFile",cascade = CascadeType.ALL)
 

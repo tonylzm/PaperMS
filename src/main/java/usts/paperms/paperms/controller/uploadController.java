@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import usts.paperms.paperms.common.MinIoUtil;
 import usts.paperms.paperms.config.MinIoProperties;
 import usts.paperms.paperms.entity.SysFile;
+import usts.paperms.paperms.entity.pigeonhole;
 import usts.paperms.paperms.security.PasswordEncryptionService;
 import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
@@ -63,6 +64,8 @@ public class uploadController {
     private LogSaveService logSaveService;
     @Autowired
     MinIoProperties minIoProperties;
+    @Autowired
+    private usts.paperms.paperms.service.pigeonholeService pigeonholeService;
 
     @ValidateToken
     @PostMapping("/upload")
@@ -79,7 +82,7 @@ public class uploadController {
             return new ResponseEntity<>("没有接收到文件资料", HttpStatus.BAD_REQUEST);
         }
         //将信息中的时间组合
-       
+
         String checkStatus = sysFileService.findCheckByFileName(filename).orElse("未审核");
 
         if(!checkStatus.equals("未审核")&& !checkStatus.contains("不通过")){
@@ -113,7 +116,6 @@ public class uploadController {
                 return new ResponseEntity<>("文件完整性检查不通过", HttpStatus.BAD_REQUEST);
             }
             rsaFileEncryptionService.encryptFile(files,filename);
-
             SysFile sysFile = new SysFile();
             sysFile.setName(filename);
             sysFile.setType(encryptedFile.getContentType());
@@ -122,7 +124,7 @@ public class uploadController {
             sysFile.setMd5(md5Checksum);
             sysFile.setProduced(username);
             sysFile.setDecrypt(false);
-
+            //sysFile.setPigeonhole(false);
             sysFile.setTestname(data.getString("name"));
             sysFile.setTesttime(time);
             sysFile.setTesttype(data.getString("region"));
@@ -176,6 +178,64 @@ public class uploadController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @ValidateToken
+    @PostMapping("/pigeonhole")
+    public ResponseEntity<String> pigeonhole(@RequestParam("username") String username,
+                                             @RequestParam("md5") String md5,
+                                             @RequestParam("encryptedFile") MultipartFile encryptedFile,
+                                             @RequestParam("fileName") String filename,
+                                             @RequestParam("aesKey") String aesKey,
+                                             @RequestParam("info") String info
+    ) throws Exception {
 
+        if (encryptedFile.isEmpty()) {
+            return new ResponseEntity<>("没有接收到文件资料", HttpStatus.BAD_REQUEST);
+        }
+        if(pigeonholeService.findByNmae(filename)!=null){
+            return new ResponseEntity<>("文件已经归档，请不要重复提交！", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            if (filename.contains("..")) {
+                return new ResponseEntity<>("文件名包含无效的路径序列", HttpStatus.BAD_REQUEST);
+            }
+            // 检查文件是否为 PDF
+            if (!encryptedFile.getContentType().equalsIgnoreCase("application/pdf")) {
+                return new ResponseEntity<>("只接收PDF格式文件，请检查", HttpStatus.BAD_REQUEST);
+            }
+            JSONObject data = new JSONObject(info);
+             // 计算文件的 MD5 校验和
+            String decryptedAesKeyString = DecryptFileService.decryptAesKeyToString(aesKey);
+            String hashedPassword= redisTemplate.opsForValue().get("hashedPassword:" + username);
+            String password= DecryptFileService.decryptAesKeyToString(hashedPassword);
+            if(!password.equals(decryptedAesKeyString)){
+                return new ResponseEntity<>("AES密钥匹配失败", HttpStatus.BAD_REQUEST);
+            }
+            MultipartFile files= DecryptFileService.decryptFile(encryptedFile,decryptedAesKeyString);
+            String md5Checksum = DecryptFileService.calculateMD5(files.getBytes());
+            if(!md5.equals(md5Checksum)){
+                return new ResponseEntity<>("文件完整性检查不通过", HttpStatus.BAD_REQUEST);
+            }
+            rsaFileEncryptionService.pigeonhole(files,filename);
+            pigeonhole pigeonhole = new pigeonhole();
+            pigeonhole.setName(filename);
+            pigeonhole.setSize(encryptedFile.getSize());
+            pigeonhole.setMd5(md5Checksum);
+            pigeonhole.setProduced(username);
+            pigeonhole.setDecrypt(false);
+            pigeonhole.setDelete(false);
+            pigeonhole.setClasses(data.getString("class"));
+            pigeonhole.setCollege(data.getString("college"));
+            pigeonholeService.save(pigeonhole);
+            logSaveService.saveLog("用户"+username+"归档了"+filename+"文件",data.getString("realName"));
+            return new ResponseEntity<>("文件归档成功", HttpStatus.OK);
 }
+catch (IOException ex) {
+            return new ResponseEntity<>("无法存储文件，请再试一次！", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
 
