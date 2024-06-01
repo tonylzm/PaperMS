@@ -284,8 +284,8 @@ public class UserService {
         return "注册成功";
     }
 
-    public Map<String,List<String>> findRealNameByUsername(){
-        List<Users> UsersInfo = userRepository.findAll();
+    public Map<String,List<String>> findRealNameByUsername(String college){
+        List<Users> UsersInfo = userRepository.findAllByCollege(college);
         List<String> realName = UsersInfo.stream()
                 .map(Users::getRealName)
                 .toList();

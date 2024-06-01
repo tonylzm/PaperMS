@@ -34,8 +34,6 @@ public class historychecked {
     @Column(name="produced")
     private String produced;
 
-    @Column(name="fromon")
-    private String fromon;
 
     @Column(name = "is_decrypt")
     private boolean decrypt;
@@ -58,4 +56,6 @@ public class historychecked {
     @Column(name ="Date" , columnDefinition = "TIMESTAMP")
     private String Date;
 
+    @Column(name ="interval_time")
+    private String intervalTime;
 }

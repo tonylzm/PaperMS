@@ -54,8 +54,11 @@ public class SysFile {
     @Column(name ="college")
     private String college;
 
-//    @Column(name = "is_pigeonhole")
-//    private boolean pigeonhole;
+    @Column(name = "is_pigeonhole")
+    private boolean pigeonhole;
+
+    @Column(name="upload_time", columnDefinition = "TIMESTAMP")
+    private String uploadTime;
 
 
     @OneToOne(mappedBy = "sysFile",cascade = CascadeType.ALL)

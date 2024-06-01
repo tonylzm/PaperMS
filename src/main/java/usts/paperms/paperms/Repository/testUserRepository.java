@@ -32,4 +32,5 @@ public interface testUserRepository extends JpaRepository<Users, Long> {
     List<Users> findUsersByUser(@Param("role") String role, @Param("college") String college);
 
 
+    List<Users> findAllByCollege(String college);
 }

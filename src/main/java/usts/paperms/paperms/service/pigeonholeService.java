@@ -26,9 +26,9 @@ public class pigeonholeService {
         return pigeonholeRespository.findByName(name);
     }
 
-    public Page<pigeonhole> findAllByCollege(String college, int pageNum, int pageSize) {
+    public Page<pigeonhole> findAllByCollege(String name,String college, int pageNum, int pageSize) {
         Pageable pageable = PageRequest.of(pageNum, pageSize);
-        return pigeonholeRespository.findAllByCollege(college, pageable);
+        return pigeonholeRespository.findAllByNameContainingAndCollege(name,college, pageable);
     }
 
     public String findMD5ByFileName(String fileName) {

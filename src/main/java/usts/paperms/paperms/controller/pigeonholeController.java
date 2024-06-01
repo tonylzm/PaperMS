@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.security.ValidateToken;
 import usts.paperms.paperms.service.LogSaveService;
+import usts.paperms.paperms.service.SysFileService;
 import usts.paperms.paperms.service.pigeonholeService;
 
 @RestController
@@ -17,12 +18,14 @@ public class pigeonholeController {
     private pigeonholeService pigeonholeService;
     @Autowired
     private LogSaveService logSaveService;
+    @Autowired
+    private SysFileService sysFileService;
 
     //通过学院查找所有的信箱
     @ValidateToken
     @GetMapping("/find_all")
-    public Result findAllByCollege(String college, int pageNum, int pageSize) {
-        return Result.success(pigeonholeService.findAllByCollege(college, pageNum, pageSize));
+    public Result findAllByCollege(@RequestParam(defaultValue = "") String name,String college, int pageNum, int pageSize) {
+        return Result.success(pigeonholeService.findAllByCollege(name,college, pageNum, pageSize));
     }
 
     @ValidateToken
@@ -37,6 +40,7 @@ public class pigeonholeController {
     @PostMapping("/reupload")
     public Result reupload(@RequestParam("fileName") String fileName){
         pigeonholeService.delete(fileName);
+        sysFileService.updateIsPigeonhole(fileName, false);
         return Result.success("删除成功");
     }
 

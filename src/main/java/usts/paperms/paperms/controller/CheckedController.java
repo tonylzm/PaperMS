@@ -4,10 +4,7 @@ package usts.paperms.paperms.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.SysFile;
 import usts.paperms.paperms.security.ValidateToken;
@@ -28,9 +25,10 @@ public class CheckedController {
     public ResponseEntity<String> classChecked(@RequestParam("fileName") String filename,
                                                @RequestParam("classCheck") String classCheck,
                                                @RequestParam("opinion") String opinion,
-                                               @RequestParam("status") String status) throws Exception {
+                                               @RequestParam("status") String status,
+                                               @RequestParam("starttime") String starttime) throws Exception {
 
-        sysFileService.updateClassCheckByFileName(filename, classCheck,opinion,status);
+        sysFileService.updateClassCheckByFileName(filename, classCheck,opinion,status,starttime);
         logSaveService.saveLog("系主任进行了对"+filename+"的审批",classCheck);
         return ResponseEntity.ok("Class check successful");
     }
@@ -40,9 +38,10 @@ public class CheckedController {
     public ResponseEntity<String> collegeChecked(@RequestParam("fileName") String filename,
                                                  @RequestParam("collegeCheck") String collegeCheck,
                                                  @RequestParam("opinion") String opinion,
-                                                 @RequestParam("status") String status) {
+                                                 @RequestParam("status") String status,
+                                                 @RequestParam("starttime") String starttime) {
 
-        sysFileService.updateCollegeCheckByFileName(filename, collegeCheck, opinion,status);
+        sysFileService.updateCollegeCheckByFileName(filename, collegeCheck, opinion,status,starttime);
         logSaveService.saveLog("院长进行了对"+filename+"的审批",collegeCheck);
         return ResponseEntity.ok("College check successful");
     }
@@ -96,5 +95,11 @@ public class CheckedController {
         Page<SysFile> page = sysFileService.findALLFilesWithCheckCollege( pageNum, pageSize, name, college_check,status,college);
         logSaveService.saveLog("院长"+college_check+"查看了"+college+"的文件",college_check);
         return Result.success(page);
+    }
+
+    //@ValidateToken
+    @GetMapping("/findUploadFile")
+    public Result findUploadFile(String college){
+        return Result.success(sysFileService.findAllByCollege(college));
     }
 }

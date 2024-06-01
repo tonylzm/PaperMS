@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import usts.paperms.paperms.Repository.CheckRespository;
 import usts.paperms.paperms.Repository.HistoryChecked;
@@ -27,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -137,6 +139,15 @@ public class SysFileService {
         return sysFileRepository.findByProducedAndNameContaining(produced,name, pageable);
     }
 
+    public List<SysFile> findAllByCollege(String college) {
+        return sysFileRepository.findAllByCollege(college);
+    }
+
+    @Transactional
+    public void updateIsPigeonhole(String fileName, boolean pigeonhole) {
+       sysFileRepository.updateIsPigeonholeByName(fileName, pigeonhole);
+    }
+
     //通过文件名称查找文件审核状态
     public Optional<String> findCheckByFileName(String fileName) {
         Optional<SysFile> sysFileOptional = Optional.ofNullable(sysFileRepository.findByName(fileName));
@@ -168,7 +179,7 @@ public class SysFileService {
     }
     //通过文件更新classCheck字段
     //如果status为系主任通过，则将文件再次加密，交由院长审核
-    public void updateClassCheckByFileName(String fileName,String classCheck,String opinion,String status) throws Exception {
+    public void updateClassCheckByFileName(String fileName,String classCheck,String opinion,String status,String starttime) throws Exception {
         SysFile sysFile = sysFileRepository.findByName(fileName);
         Optional<Check> checkOptional = checkRespository.findBySysFile(sysFile);
         if(checkOptional.isPresent()) {
@@ -186,6 +197,7 @@ public class SysFileService {
             newHistoryChecked.setId(null);
             newHistoryChecked.setStatus(status);
             newHistoryChecked.setDate(getNowTime());
+            newHistoryChecked.setIntervalTime(getTimeDifference(starttime,getNowTime()));
             newHistoryChecked.setOpinion(opinion);
             historyFileService.saveHistoryFile(newHistoryChecked);
             //更新审核状态
@@ -199,19 +211,19 @@ public class SysFileService {
     }
 
     //通过文件更新collegeCheck审核状态
-    public void updateCollegeCheckByFileName(String fileName,String collegeCheck,String opinion,String status) {
+    public void updateCollegeCheckByFileName(String fileName,String collegeCheck,String opinion,String status,String starttime) {
         SysFile sysFile = sysFileRepository.findByName(fileName);
         Optional<Check> checkOptional = checkRespository.findBySysFile(sysFile);
         if(checkOptional.isPresent()) {
             //无论审核是否通过，都将源文件删除，只保留数据库信息
             // 删除文件
             MinIoUtil.deleteFile("paperms",fileName);
-            //将sys_file表中所有信息删除，转存到history_checked表中
             historychecked newHistoryChecked = new historychecked();
             BeanUtils.copyProperties(sysFile, newHistoryChecked);
             newHistoryChecked.setId(null);
             newHistoryChecked.setStatus(status);
             newHistoryChecked.setDate(getNowTime());
+            newHistoryChecked.setIntervalTime(getTimeDifference(starttime,getNowTime()));
             newHistoryChecked.setOpinion(opinion);
             historyFileService.saveHistoryFile(newHistoryChecked);
             //更新审核状态
@@ -265,6 +277,56 @@ public class SysFileService {
     public String getNowTime() {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return df.format(new Date());
+    }
+
+    //两个时间计算时间差，返回相差小时，分钟，秒
+    public String getTimeDifference(String startTime, String endTime) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            Date start = df.parse(startTime);
+            Date end = df.parse(endTime);
+            long diff = end.getTime() - start.getTime();
+
+            long diffMinutes = diff / (60 * 1000) % 60;
+            long diffHours = diff / (60 * 60 * 1000) % 24;
+            long diffSeconds = diff / 1000 % 60;
+
+            return diffHours + " h " + diffMinutes + " min " + diffSeconds + " s " ;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getAverageTimeDifference(List<String> timeDifferences) {
+        long totalSeconds = 0;
+        long totalMinutes = 0;
+        long totalHours = 0;
+
+        for (String timeDiff : timeDifferences) {
+            String[] parts = timeDiff.split(" ");
+            long hours = Long.parseLong(parts[0]);
+            long minutes = Long.parseLong(parts[2]);
+            long seconds = Long.parseLong(parts[4]);
+
+            totalHours += hours;
+            totalMinutes += minutes;
+            totalSeconds += seconds;
+        }
+
+        //如果总分钟数和秒数超过 60，则将其转换为小时和分钟数
+        totalMinutes += totalSeconds / 60;
+        totalSeconds = totalSeconds % 60;
+        totalHours += totalMinutes / 60;
+        totalMinutes = totalMinutes % 60;
+
+        //计算平均值
+        int count = timeDifferences.size();
+        long avgHours = totalHours / count;
+        long avgMinutes = totalMinutes / count;
+        long avgSeconds = totalSeconds / count;
+
+        return avgHours + " h " + avgMinutes + " min " + avgSeconds + " s ";
     }
 
 }

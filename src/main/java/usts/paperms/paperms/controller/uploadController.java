@@ -124,12 +124,13 @@ public class uploadController {
             sysFile.setMd5(md5Checksum);
             sysFile.setProduced(username);
             sysFile.setDecrypt(false);
-            //sysFile.setPigeonhole(false);
+            sysFile.setPigeonhole(false);
             sysFile.setTestname(data.getString("name"));
             sysFile.setTesttime(time);
             sysFile.setTesttype(data.getString("region"));
             sysFile.setClasses(data.getString("class"));
             sysFile.setCollege(data.getString("college"));
+            sysFile.setUploadTime(sysFileService.getNowTime());
             sysFileService.save(sysFile,classCheck,collegeCheck);
             logSaveService.saveLog("用户"+username+"上传了"+filename+"文件",data.getString("realName"));
             return new ResponseEntity<>("文件上传成功", HttpStatus.OK);
@@ -217,6 +218,7 @@ public class uploadController {
                 return new ResponseEntity<>("文件完整性检查不通过", HttpStatus.BAD_REQUEST);
             }
             rsaFileEncryptionService.pigeonhole(files,filename);
+            sysFileService.updateIsPigeonhole(filename,true);
             pigeonhole pigeonhole = new pigeonhole();
             pigeonhole.setName(filename);
             pigeonhole.setSize(encryptedFile.getSize());

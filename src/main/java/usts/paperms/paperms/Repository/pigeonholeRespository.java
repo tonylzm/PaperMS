@@ -14,7 +14,7 @@ public interface pigeonholeRespository extends JpaRepository<pigeonhole, Long> {
 
     pigeonhole findByName(String name);
 
-    Page<pigeonhole> findAllByCollege(String college, Pageable pageable);
+    Page<pigeonhole> findAllByNameContainingAndCollege(String name,String college, Pageable pageable);
 
     @Modifying
     @Query(value = "update `pigeonhole` p set p.`is_decrypt` = :isDecrypted where p.`name` = :fileName" , nativeQuery = true)

@@ -3,10 +3,7 @@ package usts.paperms.paperms.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import usts.paperms.paperms.common.Result;
 import usts.paperms.paperms.entity.historychecked;
 import usts.paperms.paperms.security.ValidateToken;
@@ -27,5 +24,12 @@ public class HistoryFileController {
                                           @RequestParam(defaultValue = "") String name) {
         Page<historychecked> page=historyFileService.findPageByProducedAndName(pageNum,pageSize,produced,name);
         return ResponseEntity.ok(page);
+    }
+
+    //返回学院的历史文件
+    //@ValidateToken
+    @GetMapping("/findCollegeHistoryfile")
+    public Result findCollegeHistoryfile(String college) {
+        return Result.success(historyFileService.findAllByCollege(college));
     }
 }

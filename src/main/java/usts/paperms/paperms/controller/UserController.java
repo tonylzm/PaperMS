@@ -298,8 +298,8 @@ public class UserController {
 
     @ValidateToken
     @GetMapping("/get_teacher")
-    public Result getTeacher(){
-        return Result.success(userService.findRealNameByUsername());
+    public Result getTeacher(String college){
+        return Result.success(userService.findRealNameByUsername(college));
     }
 
 }

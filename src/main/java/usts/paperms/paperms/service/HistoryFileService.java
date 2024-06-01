@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import usts.paperms.paperms.Repository.HistoryChecked;
 import usts.paperms.paperms.entity.historychecked;
 
+import java.util.List;
+
 @Service
 public class HistoryFileService {
     @Autowired
@@ -21,6 +23,10 @@ public class HistoryFileService {
 
     public void saveHistoryFile(historychecked historychecked) {
         historyChecked.save(historychecked);
+    }
+
+    public List<historychecked> findAllByCollege(String college) {
+        return historyChecked.findAllByCollege(college);
     }
 
 }
