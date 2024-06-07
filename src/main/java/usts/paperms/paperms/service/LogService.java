@@ -20,7 +20,7 @@ public class LogService {
         int errorCount = 0;
         int databaseCount = 0;
         int allCount = 0;
-        String logFilePath = "/var/log/myapp/server_log.txt";
+        String logFilePath = "/PaperMS/PaperMS/src/main/resources/server_log.txt";
 
         try (BufferedReader br = new BufferedReader(new FileReader(logFilePath))) {
             String line;

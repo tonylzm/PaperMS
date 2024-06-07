@@ -43,11 +43,12 @@ public class CourseService {
     }
 
     // 添加课程
-    public String addCourse(String course_id,String course_name,String course_teacher){
+    public String addCourse(String course_id,String course_name,String course_teacher,String college){
         Course course = new Course();
         course.setCourse_id(course_id);
         course.setCourseName(course_name);
         course.setCourseTeacher(course_teacher);
+        course.setCourseCollege(college);
         courseRespository.save(course);
         return "success";
     }

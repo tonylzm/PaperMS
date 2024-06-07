@@ -55,8 +55,9 @@ public class CourseController {
     @PostMapping("/add_course")
     public Result addCourse(@RequestParam("course_id") String course_id,
                             @RequestParam("course_name") String course_name,
-                            @RequestParam("course_teacher") String course_teacher){
-        return Result.success(courseService.addCourse(course_id,course_name,course_teacher));
+                            @RequestParam("course_teacher") String course_teacher,
+                            @RequestParam("college") String college){
+        return Result.success(courseService.addCourse(course_id,course_name,course_teacher,college));
     }
     //批量添加课程
     @ValidateToken
